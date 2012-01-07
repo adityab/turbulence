@@ -12,3 +12,4 @@ Requirements for distributed Turbulence:
 * Query storage and matching against existing queries as new data comes and
   doing it efficiently.
 * Presenting consistent view of data across multiple replicas
+* Problems due to locking when multiple writers write and readers read.
