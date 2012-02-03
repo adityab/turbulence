@@ -46,3 +46,4 @@ X
     If N is equivalent to any children, since the children themselves are not
     equivalent to each other, we can immediately stop inferring any other
     relation
+

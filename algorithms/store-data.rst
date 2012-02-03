@@ -15,3 +15,5 @@ Postconditions: The data is stored in the database
     else
         For element E in Document
             STORE-ELEMENT(E, SchemaIRI)
+
+

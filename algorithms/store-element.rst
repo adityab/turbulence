@@ -17,3 +17,5 @@ Preconditions
         Add edge from CLASS(E) to CLASS(SE) identified by this SchemaIRI
         LINK-ELEMENT(LOC(SE), CLASS(SE), SchemaIRI)
         Recurse to all levels
+
+
