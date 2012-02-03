@@ -18,11 +18,9 @@ For RDF/OWL::
     // in CS, but the reasoner will want it so we insert it into GO
     
     For class C in Ontology
-        Add C to GO
-        Run the reasoner on GO
-        Check for consistency
+        LINK-CLUSTERSPACE(C)
 
-    If consistency checks succeed
+    If consistency checks and link succeed
         Save the ontology modification
         Add Schema to known ontologies table with IRI as the key
         Add Schema as a SchemaNode to CS
