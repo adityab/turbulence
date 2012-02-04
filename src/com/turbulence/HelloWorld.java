@@ -72,7 +72,7 @@ public class HelloWorld {
             OWLOntologyManager oom = OWLManager.createOWLOntologyManager();
             oom.addIRIMapper(new SimpleIRIMapper(dc, IRI.create("file:/Users/nikhilmarathe/workspace/turbulence/data/dcterms.rdf")));
             oom.addIRIMapper(new SimpleIRIMapper(foaf, IRI.create("file:/Users/nikhilmarathe/workspace/turbulence/data/foaf.rdf")));
-            oom.addIRIMapper(new SimpleIRIMapper(testO, IRI.create("file:/Users/nikhilmarathe/Downloads/test.rdf-xml.owl")));
+            oom.addIRIMapper(new SimpleIRIMapper(testO, IRI.create("file:/Users/nikhilmarathe/workspace/turbulence/data/test.rdf-xml.owl")));
 
             OWLOntology ont = oom.loadOntology(testO);
 
