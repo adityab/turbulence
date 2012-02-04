@@ -14,29 +14,29 @@ X
         Add Equivalent Edge between N and X
         END
 
-    If SUBCLASS-OF(N, X)
+    If DIRECT-SUBCLASS-OF(N, X)
         // see [#subc]_ footnote
-        subclasses = list()
-        superclasses = list()
         For XC in children of X
             If EQUIVALENT(N, XC)
                 COMPARE-CLASSES(N, XC)
                 STOP
-            If SUBCLASS-OF(N, XC)
-                APPEND(superclasses, XC)
-            If SUPERCLASS-OF(N, XC)
-                APPEND(subclasses, XC)
-        If superclasses is empty
-            LINK(N IS-A X)
-        Else
-            LINK(N IS-A superclasses)
+            If DIRECT-SUPERCLASS-OF(N, XC)   # Intermediary
+                DISCONNECT(X, XC)
+                LINK(XC IS-A N)
 
-        Disconnect all subclasses
-        LINK(subclasses IS-A N)
+            LINK(N IS-A X)                   # Child
 
-    If SUPERCLASS-OF(N, X)
-        For XP in parents of X
-            
+        For XS in SIBLINGS(X) (spanning all parents)  # Multiple Inheritance
+            If DIRECT-SUBCLASS-OF(N, XS)
+                COMPARE-CLASSES(N, XS)
+
+    Else If DIRECT-SUPERCLASS-OF(N, X)
+        LINK(X IS-A N)                       # Parent
+        For XO in (SIBLINGS(X) OR ROOTS)
+            If DIRECT-SUPERCLASS-OF(N, XO)
+                LINK(XO IS-A N)
+
+        Set ROOTS = ROOTS - [X] + [N]        # New root
 
 
 .. [#subc] since all children are siblings, if N is a subclass of any XC, then
