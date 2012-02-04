@@ -8,11 +8,7 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.*;
 import javax.xml.parsers.*;
-import org.apache.xerces.xs.*;
-import org.apache.xerces.impl.xs.XSLoaderImpl;
-
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.impl.util.FileUtils;
@@ -36,28 +32,6 @@ public class HelloWorld {
     private static enum Rels implements RelationshipType {
         IS_A,
         ASSOCIATION
-    }
-
-    public static class SubclassVisitor extends OWLObjectVisitorAdapter {
-        public void visit(OWLSubClassOfAxiom ax) {
-            System.out.println(soax.getSubClass().toString() + " is subclass of " + soax.getSuperClass().toString());
-        }
-
-        public void visit(OWLDataProperty prop) {
-            System.out.println(("$" + prop.getIRI());
-        }
-
-        public void visit(OWLClass c) {
-            System.out.println("C"+c.getIRI());
-        }
-
-        public void visit(OWLLiteral l) {
-            System.out.println("L"+c.getLiteral());
-        }
-
-        public void visit(OWLAnnotation ann) {
-            System.out.println("A"+ann.getIRI());
-        }
     }
 
     public static void main(String[] args) {
