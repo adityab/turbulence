@@ -1,2 +1,4 @@
 *.swp
 doc/_build
+data/neo4j-test-schema.db/
+paper/turbulence.pdf
