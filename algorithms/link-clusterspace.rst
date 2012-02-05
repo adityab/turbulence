@@ -4,9 +4,12 @@
 ::
 
     Q = queue of clusterspace roots
-    For X in Q:
+    while Q is not empty:
+        X = next element in Q
         COMPARE-CLASSES(N, X)
+        If N is not linked
+            Add DIRECT-SUBCLASSES-OF(X) to Q
 
-    If Q is empty and N is still no linked:
-        Set N as a new root                    # Loner
+    If N is still no linked:
+        add N as a new Root
 
