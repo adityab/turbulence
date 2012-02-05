@@ -25,7 +25,7 @@ X
                 DISCONNECT(X, XC)
                 LINK(XC IS-A N)
 
-            LINK(N IS-A X)                   # Child
+        LINK(N IS-A X)                   # Child
 
         For XS in SIBLINGS(X) (spanning all parents)  # Multiple Inheritance
             If DIRECT-SUBCLASS-OF(N, XS)
