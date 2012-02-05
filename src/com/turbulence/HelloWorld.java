@@ -37,9 +37,6 @@ public class HelloWorld {
     }
 
     public static void main(String[] args) {
-        EmbeddedGraphDatabase db = new EmbeddedGraphDatabase(DB_PATH);
-        registerShutdownHook(db);
-
         try {
             IRI dc = IRI.create(DC_URI);
             IRI foaf = IRI.create(FOAF_URI);
@@ -71,12 +68,11 @@ public class HelloWorld {
             }*/
 
             PelletReasoner r = PelletReasonerFactory.getInstance().createReasoner(ont);
-            OWLClass mh = oom.getOWLDataFactory().getOWLClass(IRI.create(TEST_URI + "#Maharashtrian"));
-            Set<Node<OWLClass>> sup = r.getSuperClasses(mh, true).getNodes();
 
-            for (Node<OWLClass> node : sup) {
-                OWLClass c = node.getRepresentativeElement();
-                System.out.println(c.getIRI());
+            ClusterSpace cluster = new ClusterSpace();
+
+            for (OWLClass c : ont.getClassesInSignature()) {
+                cluster.link(c, r);
             }
         } catch (OWLOntologyCreationIOException e) {
             System.out.println(e.getMessage());
@@ -87,13 +83,5 @@ public class HelloWorld {
         } catch (OWLOntologyCreationException e) {
             System.out.println(e.getMessage());
         }
-    }
-
-    private static void registerShutdownHook(final GraphDatabaseService db) {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                db.shutdown();
-            }
-        });
     }
 }
