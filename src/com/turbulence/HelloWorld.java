@@ -23,9 +23,11 @@ import org.semanticweb.owlapi.util.SimpleIRIMapper;
 import org.semanticweb.owlapi.util.*;
 import com.clarkparsia.pellet.owlapiv3.*;
 
+import com.turbulence.util.OntologyMapper;
+
 public class HelloWorld {
     private static String DB_PATH = "data/neo4j-test-schema.db";
-    private static String DC_URI = "http://purl.org/dc/terms";
+    private static String DC_URI = "http://purl.org/dc/terms/";
     private static String FOAF_URI = "http://xmlns.com/foaf/0.1/";
     private static String TEST_URI = "http://nikhilism.com/test1";
 
@@ -44,10 +46,7 @@ public class HelloWorld {
             IRI testO = IRI.create(TEST_URI);
 
             OWLOntologyManager oom = OWLManager.createOWLOntologyManager();
-            oom.addIRIMapper(new SimpleIRIMapper(dc, IRI.create("file:/Users/nikhilmarathe/workspace/turbulence/data/dcterms.rdf")));
-            oom.addIRIMapper(new SimpleIRIMapper(foaf, IRI.create("file:/Users/nikhilmarathe/workspace/turbulence/data/foaf.rdf")));
-            oom.addIRIMapper(new SimpleIRIMapper(testO, IRI.create("file:/Users/nikhilmarathe/workspace/turbulence/data/test.rdf-xml.owl")));
-
+            oom.addIRIMapper(new OntologyMapper());
             OWLOntology ont = oom.loadOntology(testO);
 
             /*Set<OWLClassExpression> classes = ont.getNestedClassExpressions();
