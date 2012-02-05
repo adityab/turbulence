@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="lib" path="lib/jena/commons-codec-1.5.jar"/>
-	<classpathentry kind="lib" path="lib/jena/httpclient-4.1.2.jar"/>
-	<classpathentry kind="lib" path="lib/jena/httpcore-4.1.3.jar"/>
-	<classpathentry kind="lib" path="lib/jena/icu4j-3.4.4.jar"/>
-	<classpathentry kind="lib" path="lib/jena/jena-arq-2.9.0-incubating.jar"/>
-	<classpathentry kind="lib" path="lib/jena/jena-core-2.7.0-incubating.jar"/>
-	<classpathentry kind="lib" path="lib/jena/jena-iri-0.9.0-incubating.jar"/>
-	<classpathentry kind="lib" path="lib/jena/log4j-1.2.16.jar"/>
-	<classpathentry kind="lib" path="lib/jena/slf4j-api-1.6.4.jar"/>
-	<classpathentry kind="lib" path="lib/jena/slf4j-log4j12-1.6.4.jar"/>
-	<classpathentry kind="lib" path="lib/jena/xercesImpl-2.10.0.jar"/>
-	<classpathentry kind="lib" path="lib/jena/xml-apis-1.4.01.jar"/>
 	<classpathentry kind="lib" path="lib/neo4j/geronimo-jta_1.1_spec-1.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/neo4j/lucene-core-3.5.0.jar"/>
 	<classpathentry kind="lib" path="lib/neo4j/neo4j-community-1.6.jar"/>
@@ -31,18 +19,6 @@
 	<classpathentry kind="lib" path="lib/pellet/antlr/antlr-runtime-3.2.jar"/>
 	<classpathentry kind="lib" path="lib/pellet/aterm-java-1.6.jar"/>
 	<classpathentry kind="lib" path="lib/pellet/jaxb/jaxb-api.jar"/>
-	<classpathentry kind="lib" path="lib/pellet/jena/arq-2.8.7.jar"/>
-	<classpathentry kind="lib" path="lib/pellet/jena/icu4j-3.4.4.jar"/>
-	<classpathentry kind="lib" path="lib/pellet/jena/iri-0.8.jar"/>
-	<classpathentry kind="lib" path="lib/pellet/jena/jena-2.6.4.jar"/>
-	<classpathentry kind="lib" path="lib/pellet/jena/junit-4.5.jar"/>
-	<classpathentry kind="lib" path="lib/pellet/jena/log4j-1.2.13.jar"/>
-	<classpathentry kind="lib" path="lib/pellet/jena/lucene-core-2.3.1.jar"/>
-	<classpathentry kind="lib" path="lib/pellet/jena/slf4j-api-1.5.8.jar"/>
-	<classpathentry kind="lib" path="lib/pellet/jena/slf4j-log4j12-1.5.8.jar"/>
-	<classpathentry kind="lib" path="lib/pellet/jena/stax-api-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib/pellet/jena/wstx-asl-3.2.9.jar"/>
-    <!--<classpathentry kind="lib" path="lib/pellet/jena/xercesImpl-2.7.1.jar"/>-->
 	<classpathentry kind="lib" path="lib/pellet/jetty/commons-logging-api.jar"/>
 	<classpathentry kind="lib" path="lib/pellet/jetty/jetty.jar"/>
 	<classpathentry kind="lib" path="lib/pellet/jgrapht/jgrapht-jdk1.5.jar"/>
