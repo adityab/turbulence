@@ -9,6 +9,7 @@ X
     Space Graph and can be navigated via relationships.
 
 ::
+
     If EQUIVALENT(N, X)
     Then
         Add Equivalent Edge between N and X
