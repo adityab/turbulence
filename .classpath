@@ -36,7 +36,7 @@
 	<classpathentry kind="lib" path="lib/pellet/pellet-jena.jar"/>
 	<classpathentry kind="lib" path="lib/pellet/pellet-modularity.jar"/>
 	<!--<classpathentry kind="lib" path="lib/pellet/pellet-owlapi.jar"/>-->
-	<!--<classpathentry kind="lib" path="lib/pellet/pellet-owlapiv3.jar"/>-->
+    <classpathentry kind="lib" path="lib/pellet/pellet-owlapiv3.jar"/>
 	<classpathentry kind="lib" path="lib/pellet/pellet-pellint.jar"/>
 	<classpathentry kind="lib" path="lib/pellet/pellet-query.jar"/>
 	<classpathentry kind="lib" path="lib/pellet/pellet-rules.jar"/>
