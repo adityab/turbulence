@@ -14,6 +14,16 @@
           <name>ATerm repo</name>
           <url>http://www.activemath.org/public-repository/</url>
       </repository>
+      <repository>
+          <id>aksw</id>
+          <name>Pellet repo</name>
+          <url>http://maven.aksw.org/archiva/repository/internal/</url>
+      </repository>
+      <repository>
+          <id>berkeleybop</id>
+          <name>owlapi repo</name>
+          <url>http://code.berkeleybop.org/maven/repository/</url>
+      </repository>
   </repositories>
 
   <dependencies>
@@ -31,51 +41,15 @@
       </dependency>
 
       <dependency>
-          <groupId>com.clarkparsia</groupId>
+          <groupId>com.owldl</groupId>
           <artifactId>pellet</artifactId>
           <version>2.3.0</version>
       </dependency>
 
       <dependency>
-          <groupId>com.clarkparsia.pellet</groupId>
-          <artifactId>owlapiv3</artifactId>
-          <version>2.3.0</version>
-      </dependency>
-
-      <dependency>
-          <groupId>com.clarkparsia.pellet</groupId>
-          <artifactId>el</artifactId>
-          <version>2.3.0</version>
-      </dependency>
-
-      <dependency>
-          <groupId>com.clarkparsia.pellet</groupId>
-          <artifactId>rules</artifactId>
-          <version>2.3.0</version>
-      </dependency>
-
-      <dependency>
-          <groupId>com.clarkparsia.pellet</groupId>
-          <artifactId>datatypes</artifactId>
-          <version>2.3.0</version>
-      </dependency>
-
-      <dependency>
-          <groupId>org.semanticweb</groupId>
+          <groupId>owlapi</groupId>
           <artifactId>owlapi</artifactId>
           <version>3.2.4</version>
-      </dependency>
-
-      <dependency>
-          <groupId>aterm</groupId>
-          <artifactId>aterm</artifactId>
-          <version>1.6</version>
-      </dependency>
-
-      <dependency>
-          <groupId>jgrapht</groupId>
-          <artifactId>jgrapht</artifactId>
-          <version>0.7.3</version>
       </dependency>
   </dependencies>
 
