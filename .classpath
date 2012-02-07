@@ -1,50 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-    <classpathentry kind="lib" path="lib/neo4j/geronimo-jta_1.1_spec-1.1.1.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/lucene-core-3.5.0.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/neo4j-community-1.6.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/neo4j-cypher-1.6.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/neo4j-graph-algo-1.6.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/neo4j-graph-matching-1.6.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/neo4j-jmx-1.6.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/neo4j-kernel-1.6-tests.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/neo4j-kernel-1.6.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/neo4j-lucene-index-1.6.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/neo4j-shell-1.6.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/neo4j-udc-1.6.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/org.apache.servicemix.bundles.jline-0.9.94_1.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/scala-library-2.9.0-1.jar"/>
-    <classpathentry kind="lib" path="lib/neo4j/server-api-1.6.jar"/>
-    <classpathentry kind="lib" path="lib/owlapi/owlapi-bin.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/antlr/antlr-runtime-3.2.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/aterm-java-1.6.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/jaxb/jaxb-api.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/jetty/commons-logging-api.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/jetty/jetty.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/jgrapht/jgrapht-jdk1.5.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/junit/junit.jar"/>
-    <!--<classpathentry kind="lib" path="lib/pellet/owlapi/owlapi-bin.jar"/>-->
-    <!--<classpathentry kind="lib" path="lib/pellet/owlapi/owlapi-src.jar"/>-->
-    <!--<classpathentry kind="lib" path="lib/pellet/owlapiv3/owlapi-bin.jar"/>-->
-    <!--<classpathentry kind="lib" path="lib/pellet/owlapiv3/owlapi-src.jar"/>-->
-    <classpathentry kind="lib" path="lib/pellet/pellet-cli.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/pellet-core.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/pellet-datatypes.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/pellet-dig.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/pellet-el.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/pellet-explanation.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/pellet-jena.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/pellet-modularity.jar"/>
-    <!--<classpathentry kind="lib" path="lib/pellet/pellet-owlapi.jar"/>-->
-    <classpathentry kind="lib" path="lib/pellet/pellet-owlapiv3.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/pellet-pellint.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/pellet-query.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/pellet-rules.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/pellet-test.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/servlet.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/xsdlib/relaxngDatatype.jar"/>
-    <classpathentry kind="lib" path="lib/pellet/xsdlib/xsdlib.jar"/>
-    <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-    <classpathentry kind="src" path="src/main"/>
-    <classpathentry kind="output" path="bin"/>
+  <classpathentry kind="src" path="src/test/java" output="target/test-classes" including="**/*.java"/>
+  <classpathentry kind="src" path="src/main/java" including="**/*.java"/>
+  <classpathentry kind="output" path="target/classes"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 </classpath>
