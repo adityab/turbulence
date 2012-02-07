@@ -4,3 +4,4 @@ data/neo4j-test-schema.db/
 paper/turbulence.pdf
 bin/
 .settings/
+target/
