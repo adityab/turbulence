@@ -17,6 +17,9 @@ Contents:
    distributeddb
    schemas
 
+   running
+   configuration
+   apiref
 
 
 Indices and tables
