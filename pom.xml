@@ -53,7 +53,7 @@
       </dependency>
   </dependencies>
 
-  <build>
+  <!--build>
       <plugins>
           <plugin>
               <groupId>org.codehaus.mojo</groupId>
@@ -61,10 +61,36 @@
               <version>1.2.1</version>
               <configuration>
                   <executable>java</executable>
-
               </configuration>
           </plugin>
       </plugins>
-  </build>
+  </build-->
+  
+  <!--build>
+      <plugins>
+          <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>exec-maven-plugin</artifactId>
+              <version>1.2.1</version>
+              <configuration>
+                  <executable>java</executable>
+              </configuration>
+          </plugin>
+      </plugins>
+  </build-->
+
+    <build>
+        <!-- For annotations and other Java5 stuff -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
