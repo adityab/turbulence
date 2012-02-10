@@ -15,6 +15,14 @@ public class OntologyMapper implements OWLOntologyIRIMapper {
         knownOntologies.put(IRI.create("http://nikhilism.com/test1"), IRI.create("file:/Users/nikhilmarathe/workspace/turbulence/data/test.rdf-xml.owl"));
     }
 
+    public void put(IRI ontologyIRI, IRI local) {
+        knownOntologies.put(ontologyIRI, local);
+    }
+
+    public void put(String url, String local) {
+        put(IRI.create(url), IRI.create(local));
+    }
+
     public IRI getDocumentIRI(IRI ontologyIRI) {
         System.out.println("Cll " +ontologyIRI);
         return knownOntologies.get(ontologyIRI);
