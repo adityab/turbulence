@@ -9,10 +9,10 @@
     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
     xmlns:swrl="http://www.w3.org/2003/11/swrl#"
     xmlns:j.0="http://purl.org/dc/dcam/"
-    xmlns="http://nikhilism.com/test1#"
+    xmlns="http://nikhilism.com/turbulence/clusterspace-test1#"
     xmlns:swrlb="http://www.w3.org/2003/11/swrlb#"
     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-  xml:base="http://nikhilism.com/test1" > 
+    xml:base="http://nikhilism.com/turbulence/clusterspace-test1" >
   <rdf:Description rdf:about="http://purl.org/dc/elements/1.1/relation">
     <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
   </rdf:Description>
