@@ -7,6 +7,8 @@ import java.net.UnknownHostException;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 
 import javax.xml.parsers.*;
 import org.neo4j.graphdb.*;
@@ -23,65 +25,66 @@ import org.semanticweb.owlapi.util.SimpleIRIMapper;
 import org.semanticweb.owlapi.util.*;
 import com.clarkparsia.pellet.owlapiv3.*;
 
+import org.glassfish.grizzly.http.server.HttpServer;
+import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory;
+import com.sun.jersey.api.core.PackagesResourceConfig;
+import com.sun.jersey.api.core.ResourceConfig;
+
 import com.turbulence.util.OntologyMapper;
 
 public class HelloWorld {
-    private static String DB_PATH = "data/neo4j-test-schema.db";
-    private static String DC_URI = "http://purl.org/dc/terms/";
-    private static String FOAF_URI = "http://xmlns.com/foaf/0.1/";
-    private static String TEST_URI = "http://nikhilism.com/test1";
+    private ClusterSpace clusterSpace;
+    private HttpServer httpServer;
+    private BlockingQueue<String> exitQueue;
 
     private static enum Rels implements RelationshipType {
         IS_A,
         ASSOCIATION
     }
 
-    public static void main(String[] args) {
+    private HelloWorld() {
+        exitQueue = new SynchronousQueue<String>();
+        // create the clusterspace
+        setupClusterSpace("/tmp/clusterspace.db");
+        // start the ontology system
+        // start the HTTP server
+        setupHTTPServer("http://localhost:5000/");
+    }
+
+    /**
+     * Call this if the main thread no longer has work to do
+     * except in the case when events come in.
+     */
+    private void loop() {
+        // TODO fix this to setup message passing
+        // and then wait properly
+        // wait until someone tells us otherwise
         try {
-            IRI dc = IRI.create(DC_URI);
-            IRI foaf = IRI.create(FOAF_URI);
-            IRI testO = IRI.create(TEST_URI);
-
-            OWLOntologyManager oom = OWLManager.createOWLOntologyManager();
-            oom.addIRIMapper(new OntologyMapper());
-            OWLOntology ont = oom.loadOntology(testO);
-
-            /*Set<OWLClassExpression> classes = ont.getNestedClassExpressions();
-            for (OWLClassExpression ex : classes) {
-                OWLClass c = ex.asOWLClass();
-
-                //c.accept(vis);
-            }
-            ont.accept(vis);
-                /*Set<OWLAxiom> axs = ont.getReferencingAxioms(c);
-                for (OWLAxiom ax : axs) {
-                    System.out.println(ax.getAxiomType().toString());
-                    if (ax.getAxiomType() == AxiomType.SUBCLASS_OF) {
-                        OWLSubClassOfAxiom soax = (OWLSubClassOfAxiom) ax;
-                        System.out.println(soax.getSubClass().toString() + " is subclass of " + soax.getSuperClass().toString());
-                    }
-                    else if (ax.getAxiomType() == AxiomType.DATA_PROPERTY_DOMAIN) {
-                        OWLDataPropertyAxiom dax = (OWLDataPropertyAxiom) ax;
-                        System.out.println("Data property " + 
-                    }
-                }
-            }*/
-
-            PelletReasoner r = PelletReasonerFactory.getInstance().createReasoner(ont);
-
-            ClusterSpace cluster = new ClusterSpace(DB_PATH);
-
-            for (OWLClass c : ont.getClassesInSignature()) {
-                cluster.link(c, r);
-            }
-        } catch (OWLOntologyCreationIOException e) {
-            System.out.println(e.getMessage());
-        } catch (UnparsableOntologyException e) {
-            System.out.println(e.getMessage());
-        } catch (UnloadableImportException e) {
-            System.out.println(e.getMessage());
-        } catch (OWLOntologyCreationException e) {
-            System.out.println(e.getMessage());
+            exitQueue.take();
+        } catch (InterruptedException e) {
         }
+    }
+
+    private void setupClusterSpace(String dbPath) {
+        clusterSpace = new ClusterSpace(dbPath);
+    }
+
+    private void setupHTTPServer(String endpoint) {
+        ResourceConfig rc = new PackagesResourceConfig("com.turbulence.rest");
+        try {
+            GrizzlyServerFactory.createHttpServer(endpoint, rc);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+            // TODO: crash here
+        }
+    }
+
+    public static void main(String[] args) {
+        // TODO: read the config
+        // find config file by parsing options
+        // pass config parser instance to HW
+        HelloWorld hw = new HelloWorld();
+        hw.loop();
     }
 }
