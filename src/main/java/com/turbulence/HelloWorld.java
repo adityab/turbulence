@@ -69,7 +69,7 @@ public class HelloWorld {
 
             PelletReasoner r = PelletReasonerFactory.getInstance().createReasoner(ont);
 
-            ClusterSpace cluster = new ClusterSpace();
+            ClusterSpace cluster = new ClusterSpace(DB_PATH);
 
             for (OWLClass c : ont.getClassesInSignature()) {
                 cluster.link(c, r);

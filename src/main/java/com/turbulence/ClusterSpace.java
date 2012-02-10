@@ -18,7 +18,6 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 
 public class ClusterSpace {
-    private static final String DB_PATH = "data/neo4j-test-schema.db"; // TODO: move to configuration setting
     private EmbeddedGraphDatabase db;
 
     public enum RelTypes implements RelationshipType {
@@ -27,9 +26,9 @@ public class ClusterSpace {
         EQUIVALENT_CLASS
     }
 
-    public ClusterSpace() {
+    public ClusterSpace(String db_path) {
         System.out.println("CSPACE");
-        db = new EmbeddedGraphDatabase(DB_PATH);
+        db = new EmbeddedGraphDatabase(db_path);
         registerShutdownHook(db);
 
     }
