@@ -1,6 +1,6 @@
 package com.turbulence.util;
 
-public class ConfigParseException extends Exception {
+public class ConfigParseException extends RuntimeException {
 
     public ConfigParseException() {
         // TODO Auto-generated constructor stub
