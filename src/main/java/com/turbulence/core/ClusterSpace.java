@@ -1,4 +1,6 @@
-package com.turbulence;
+package com.turbulence.core;
+
+import java.util.logging.Logger;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -19,6 +21,7 @@ import org.semanticweb.owlapi.reasoner.NodeSet;
 
 public class ClusterSpace {
     private EmbeddedGraphDatabase db;
+    private Logger logger;
 
     public enum RelTypes implements RelationshipType {
         ROOT,
@@ -26,9 +29,10 @@ public class ClusterSpace {
         EQUIVALENT_CLASS
     }
 
-    public ClusterSpace(String db_path) {
-        System.out.println("CSPACE");
-        db = new EmbeddedGraphDatabase(db_path);
+    public ClusterSpace(String dbPath) {
+        logger = Logger.getLogger(this.class.getName());
+        logger.info("ClusterSpace using database " + db_path);
+        db = new EmbeddedGraphDatabase(dbPath);
         registerShutdownHook(db);
 
     }
@@ -229,4 +233,3 @@ public class ClusterSpace {
         });
     }
 }
-
