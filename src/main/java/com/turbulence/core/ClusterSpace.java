@@ -30,8 +30,8 @@ public class ClusterSpace {
     }
 
     public ClusterSpace(String dbPath) {
-        logger = Logger.getLogger(this.class.getName());
-        logger.info("ClusterSpace using database " + db_path);
+        logger = Logger.getLogger(this.getClass().getName());
+        logger.info("ClusterSpace using database " + dbPath);
         db = new EmbeddedGraphDatabase(dbPath);
         registerShutdownHook(db);
 

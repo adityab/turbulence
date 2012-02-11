@@ -1,30 +1,25 @@
 package com.turbulence.util;
 
-import java.util.HashMap;
+import java.io.File;
+
+import org.apache.commons.codec.digest.DigestUtils;
 
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntologyIRIMapper;
 
 public class OntologyMapper implements OWLOntologyIRIMapper {
-    private HashMap<IRI,IRI> knownOntologies;
+    private File directory;
 
-    public OntologyMapper() {
-        knownOntologies = new HashMap<IRI, IRI>();
-        knownOntologies.put(IRI.create("http://purl.org/dc/terms/"), IRI.create("file:/Users/nikhilmarathe/workspace/turbulence/data/dcterms.rdf"));
-        knownOntologies.put(IRI.create("http://xmlns.com/foaf/0.1/"), IRI.create("file:/Users/nikhilmarathe/workspace/turbulence/data/foaf.rdf"));
-        knownOntologies.put(IRI.create("http://nikhilism.com/test1"), IRI.create("file:/Users/nikhilmarathe/workspace/turbulence/data/test.rdf-xml.owl"));
-    }
-
-    public void put(IRI ontologyIRI, IRI local) {
-        knownOntologies.put(ontologyIRI, local);
-    }
-
-    public void put(String url, String local) {
-        put(IRI.create(url), IRI.create(local));
+    public OntologyMapper(File baseDir) {
+        directory = baseDir;
     }
 
     public IRI getDocumentIRI(IRI ontologyIRI) {
-        System.out.println("Cll " +ontologyIRI);
-        return knownOntologies.get(ontologyIRI);
+        String sha1 = DigestUtils.shaHex(ontologyIRI.toString());
+        File f = new File(directory, sha1);
+        if (f.exists())
+            return IRI.create(f);
+
+        return null;
     }
 }

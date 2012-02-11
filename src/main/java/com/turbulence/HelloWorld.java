@@ -1,5 +1,7 @@
 package com.turbulence;
 
+import java.util.logging.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -7,10 +9,14 @@ import java.net.UnknownHostException;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Enumeration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Executors;
 
 import javax.xml.parsers.*;
+
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.impl.util.FileUtils;
@@ -30,22 +36,29 @@ import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory;
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 
+import com.turbulence.core.TurbulenceDriver;
 import com.turbulence.util.OntologyMapper;
+import com.turbulence.util.Config;
 
 public class HelloWorld {
-    private ClusterSpace clusterSpace;
+    private TurbulenceDriver driver;
     private HttpServer httpServer;
     private BlockingQueue<String> exitQueue;
+    private BlockingQueue<String> driverRESTChannel;
+
+    private Logger logger;
 
     private static enum Rels implements RelationshipType {
         IS_A,
         ASSOCIATION
     }
 
-    private HelloWorld() {
+    private HelloWorld(Config config) {
+        logger = Logger.getLogger(this.getClass().getName());
         exitQueue = new SynchronousQueue<String>();
+        driverRESTChannel = new LinkedBlockingQueue<String>();
         // create the clusterspace
-        setupClusterSpace("/tmp/clusterspace.db");
+        setupDriver(config);
         // start the ontology system
         // start the HTTP server
         setupHTTPServer("http://localhost:5000/");
@@ -60,13 +73,21 @@ public class HelloWorld {
         // and then wait properly
         // wait until someone tells us otherwise
         try {
-            exitQueue.take();
+            new Thread(driver).start();
+            driverRESTChannel.put("http://purl.org/dc/terms/");
+        } catch (Exception e) {
+            logger.severe("Could not start TurbulenceDriver thread");
+            System.exit(1);
+        }
+        try {
+            while (true)
+                exitQueue.take();
         } catch (InterruptedException e) {
         }
     }
 
-    private void setupClusterSpace(String dbPath) {
-        clusterSpace = new ClusterSpace(dbPath);
+    private void setupDriver(Config config) {
+        driver = new TurbulenceDriver(config, driverRESTChannel);
     }
 
     private void setupHTTPServer(String endpoint) {
@@ -84,7 +105,7 @@ public class HelloWorld {
         // TODO: read the config
         // find config file by parsing options
         // pass config parser instance to HW
-        HelloWorld hw = new HelloWorld();
+        HelloWorld hw = new HelloWorld(Config.getInstance());
         hw.loop();
     }
 }

@@ -1,0 +1,5 @@
+{
+    "core" : {
+        "data_dir" : "./data"
+    }
+}
