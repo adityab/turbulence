@@ -40,7 +40,7 @@ import com.turbulence.core.TurbulenceDriver;
 import com.turbulence.util.OntologyMapper;
 import com.turbulence.util.Config;
 
-public class HelloWorld {
+public class Turbulence {
     private TurbulenceDriver driver;
     private HttpServer httpServer;
     private BlockingQueue<String> exitQueue;
@@ -53,7 +53,7 @@ public class HelloWorld {
         ASSOCIATION
     }
 
-    private HelloWorld(Config config) {
+    private Turbulence(Config config) {
         logger = Logger.getLogger(this.getClass().getName());
         exitQueue = new SynchronousQueue<String>();
         driverRESTChannel = new LinkedBlockingQueue<String>();
@@ -105,7 +105,7 @@ public class HelloWorld {
         // TODO: read the config
         // find config file by parsing options
         // pass config parser instance to HW
-        HelloWorld hw = new HelloWorld(Config.getInstance());
+        Turbulence hw = new Turbulence(Config.getInstance());
         hw.loop();
     }
 }
