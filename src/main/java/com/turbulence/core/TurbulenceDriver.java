@@ -11,8 +11,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -39,26 +41,25 @@ import com.turbulence.util.ConfigParseException;
 import com.turbulence.util.OntologyMapper;
 import com.turbulence.util.OntologySaver;
 
-public class TurbulenceDriver implements Runnable {
+public class TurbulenceDriver {
     private static final String CLUSTERSPACE_FILE = "clusterspace.db";
     private static final String ONTOLOGY_STORE_DIR = "ontologies";
 
-    private String dataDir = null;
+    private static String dataDir = null;
 
-    private ClusterSpace clusterSpace;
+    private static EmbeddedGraphDatabase clusterSpaceDB;
+
     private OWLOntologyManager ontologyManager;
     private OntologyMapper ontologyMapper;
-    private Config config;
+    private static Config config;
 
-    private ExecutorService threadPool;
+    private static ExecutorService threadPool;
 
-    private Logger logger;
+    private static Logger logger;
 
-    private BlockingQueue<String> requestQueue;
-
-    public TurbulenceDriver(Config config, BlockingQueue<String> queue) {
-        logger = Logger.getLogger(this.getClass().getName());
-        this.config = config;
+    public static void initialize(Config config) {
+        logger = Logger.getLogger("com.turbulence.core.TurbulenceDriver");
+        config = config;
 
         JSONObject core = config.getSection("core");
         if (core == null)
@@ -75,12 +76,9 @@ public class TurbulenceDriver implements Runnable {
         }
 
         threadPool = Executors.newFixedThreadPool(20);
-        setupClusterSpace();
-        setupOntologySpace();
-        requestQueue = queue;
     }
 
-    private void setupOntologySpace() {
+    /*private void setupOntologySpace() {
         File ontStore = new File(dataDir, ONTOLOGY_STORE_DIR);
         try {
             ontStore.mkdir();
@@ -90,35 +88,29 @@ public class TurbulenceDriver implements Runnable {
         ontologyManager = OWLManager.createOWLOntologyManager();
         ontologyMapper = new OntologyMapper(ontStore);
         ontologyManager.addIRIMapper(ontologyMapper);
+    }*/
+
+    public static ClusterSpace getClusterSpace() {
+        return new ClusterSpace((new File(dataDir, CLUSTERSPACE_FILE)).getAbsolutePath());
     }
 
-    private void setupClusterSpace() {
-        clusterSpace = new ClusterSpace((new File(dataDir, CLUSTERSPACE_FILE)).getAbsolutePath());
-    }
-
-    public void run() {
-        try {
-            while (true) {
-                String url = requestQueue.take();
-                registerSchema(url);
-                // wait for events
-            }
-        } catch (InterruptedException e) {
-            logger.warning("TurbulenceDriver interrupted");
+    public static EmbeddedGraphDatabase getClusterSpaceDB() {
+        synchronized (TurbulenceDriver.class) {
+            if (clusterSpaceDB == null)
+                clusterSpaceDB = new EmbeddedGraphDatabase(new File(dataDir, CLUSTERSPACE_FILE).getAbsolutePath());
         }
+        return clusterSpaceDB;
     }
 
-    public void registerSchema(String url) {
-        logger.entering(this.getClass().getName(), "registerSchema", url);
-        IRI iri = IRI.create(url);
-        try {
-            OWLOntology ont = ontologyManager.loadOntology(IRI.create(url));
-            if (ontologyMapper.getDocumentIRI(iri) == null)
-                threadPool.submit(new OntologySaver(iri, ont, new File(dataDir, ONTOLOGY_STORE_DIR)));
-            logger.warning("loaded " + ont);
-        } catch (OWLOntologyCreationException e) {
-            // TODO handle this doo doo
-        }
-        // TODO implement rest
+    public static <T> Future<T> submit(Callable<T> task) {
+        return threadPool.submit(task);
+    }
+
+    public static Future<?> submit(Runnable task) {
+        return threadPool.submit(task);
+    }
+
+    public static File getOntologyStoreDirectory() {
+        return new File(dataDir, ONTOLOGY_STORE_DIR);
     }
 }

@@ -41,10 +41,8 @@ import com.turbulence.util.OntologyMapper;
 import com.turbulence.util.Config;
 
 public class Turbulence {
-    private TurbulenceDriver driver;
     private HttpServer httpServer;
     private BlockingQueue<String> exitQueue;
-    private BlockingQueue<String> driverRESTChannel;
 
     private Logger logger;
 
@@ -56,7 +54,6 @@ public class Turbulence {
     private Turbulence(Config config) {
         logger = Logger.getLogger(this.getClass().getName());
         exitQueue = new SynchronousQueue<String>();
-        driverRESTChannel = new LinkedBlockingQueue<String>();
         // create the clusterspace
         setupDriver(config);
         // start the ontology system
@@ -69,16 +66,6 @@ public class Turbulence {
      * except in the case when events come in.
      */
     private void loop() {
-        // TODO fix this to setup message passing
-        // and then wait properly
-        // wait until someone tells us otherwise
-        try {
-            new Thread(driver).start();
-            driverRESTChannel.put("http://purl.org/dc/terms/");
-        } catch (Exception e) {
-            logger.severe("Could not start TurbulenceDriver thread");
-            System.exit(1);
-        }
         try {
             while (true)
                 exitQueue.take();
@@ -87,7 +74,7 @@ public class Turbulence {
     }
 
     private void setupDriver(Config config) {
-        driver = new TurbulenceDriver(config, driverRESTChannel);
+        TurbulenceDriver.initialize(config);
     }
 
     private void setupHTTPServer(String endpoint) {
