@@ -1,5 +1,5 @@
 {
     "core" : {
-        "data_dir" : "./data"
+        "data_dir" : "./data/devel"
     }
 }
