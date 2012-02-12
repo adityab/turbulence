@@ -31,7 +31,7 @@ Register schema
 ^^^^^^^^^^^^^^^
 
 Registers a new schema (XML Schema or OWL/RDFS Ontology file) with Turbulence.
-The schema can be submitted in the POST body or as a URL. Although this is not
+The schema can be submitted in the POST body as an URL. Although this is not
 absolutely necessary to be called before `Post data`_, it is RECOMMENDED to
 speed up `Post data`_.
 
@@ -40,12 +40,8 @@ speed up `Post data`_.
 Options
 ~~~~~~~
 
-body : data
-    Schema sent with HTTP header with a proper mime type
-    - :mimetype:`application/rdf+xml` or :mimetype:`application/xml`
-
-url : string (optional)
-    URL to fetch the schema from. Message body will be ignored in this case.
+url : string
+    URL to fetch the schema from.
 
 Response
 ~~~~~~~~
