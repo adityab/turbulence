@@ -75,7 +75,7 @@ public class RegisterSchemaAction {
     }
 
     public enum RelTypes implements RelationshipType {
-        ROOT,
+        ROOT, // a ROOT goes from reference Node (outgoing) -> to Node
         IS_A,
         EQUIVALENT_CLASS
     }
@@ -213,12 +213,12 @@ public class RegisterSchemaAction {
     }
 
     private boolean isRoot(Node n) {
-        return n.hasRelationship(RelTypes.ROOT, Direction.BOTH);
+        return n.hasRelationship(RelTypes.ROOT, Direction.INCOMING);
     }
 
     private void removeRoot(Node n) {
         assert isRoot(n);
-        Relationship rel = n.getSingleRelationship(RelTypes.ROOT, Direction.BOTH);
+        Relationship rel = n.getSingleRelationship(RelTypes.ROOT, Direction.INCOMING);
         rel.delete();
     }
 
