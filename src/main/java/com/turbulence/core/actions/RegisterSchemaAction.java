@@ -3,6 +3,7 @@ package com.turbulence.core.actions;
 import java.util.logging.Logger;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -44,13 +45,23 @@ public class RegisterSchemaAction {
         cs = TurbulenceDriver.getClusterSpaceDB();
         registerShutdownHook(cs);
 
-        // TODO recursion of imported ontologies
         logger.warning(this.getClass().getName()+ " perform "+ schemaURI);
         IRI iri = IRI.create(schemaURI);
+        // TODO keep an index of known registered ontologies to avoid
+        // duplication
+        // ship buggy similarity ontology
         try {
             OWLOntology ont = ontologyManager.loadOntology(iri);
             if (ontologyMapper.getDocumentIRI(iri) == null)
                 TurbulenceDriver.submit(new OntologySaver(iri, ont, TurbulenceDriver.getOntologyStoreDirectory()));
+
+            for (OWLImportsDeclaration decl : ont.getImportsDeclarations()) {
+                logger.info("Registering imported ontology " + decl.getIRI());
+                try {
+                    RegisterSchemaAction act = ActionFactory.createRegisterSchemaAction(new URI(decl.getIRI().toString()));
+                    act.perform();
+                } catch (URISyntaxException e) {} // seriously?
+            }
             logger.warning("loaded " + ont);
 
             PelletReasoner reasoner = PelletReasonerFactory.getInstance().createReasoner(ont);

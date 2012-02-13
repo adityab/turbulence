@@ -29,11 +29,13 @@ public class RESTv1 {
             Result r = new Result();
             r.error = 45;
             r.message = e.getMessage();
+            e.printStackTrace();
             return r;
         } catch (InterruptedException e) {
             Result r = new Result();
             r.error = 46;
             r.message = e.getMessage();
+            e.printStackTrace();
             return r;
         }
     }
