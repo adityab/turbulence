@@ -219,6 +219,8 @@ public class RegisterSchemaAction {
     }
 
     private void addRoot(Node n) {
+        if (n.hasRelationship(RelTypes.ROOT, Direction.INCOMING))
+            return;
         Node ref = cs.getReferenceNode();
         ref.createRelationshipTo(n, RelTypes.ROOT);
     }
