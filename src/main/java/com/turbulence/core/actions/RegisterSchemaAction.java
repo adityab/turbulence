@@ -12,6 +12,7 @@ import java.util.Queue;
 import java.util.LinkedList;
 
 import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.index.*;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.impl.util.FileUtils;
 
@@ -40,6 +41,8 @@ public class RegisterSchemaAction {
     private OWLOntologyManager ontologyManager;
     private OntologyMapper ontologyMapper;
     private EmbeddedGraphDatabase cs;
+    private Index<Node> ontologyIndex;
+    private static final String KNOWN_ONTOLOGY_KEY = "KNOWN_ONTOLOGY";
 
     protected RegisterSchemaAction(URI uri)
     {
@@ -52,6 +55,8 @@ public class RegisterSchemaAction {
 
     public Result perform() {
         cs = TurbulenceDriver.getClusterSpaceDB();
+        ontologyIndex = cs.index().forNodes("ontologyIndex");
+
         registerShutdownHook(cs);
 
         logger.warning(this.getClass().getName()+ " perform "+ schemaURI);
@@ -73,10 +78,54 @@ public class RegisterSchemaAction {
             }
             logger.warning("loaded " + ont);
 
+            Node ontNode;
+            Transaction tx = cs.beginTx();
+            try {
+                // create a Node for the ontology itself
+                ontNode = cs.createNode();
+                ontNode.setProperty("IRI", iri.toString());
+                // put if absent will return the OLD node if one existed, so
+                // that we don't have duplicates
+                Node previous = ontologyIndex.putIfAbsent(ontNode, KNOWN_ONTOLOGY_KEY, iri);
+
+                if (previous != null) {
+                    // abort this entire RegisterSchema operation, because
+                    // somebody else already inserted this schema before, or
+                    // is doing/will do so in parallel right now.
+                    tx.finish();
+                    Result r = new Result();
+                    r.success = false;
+                    r.error = TurbulenceError.SCHEMA_IS_ALREADY_REGISTERED;
+                    return r;
+                }
+
+                getKnownOntologiesReferenceNode().createRelationshipTo(ontNode, RelTypes.KNOWN_ONTOLOGY);
+                tx.success();
+            } finally {
+                tx.finish();
+            }
+
+            if (ontNode == null) {
+                Result r = new Result();
+                r.success = false;
+                r.error = TurbulenceError.SCHEMA_REGISTRATION_FAILED;
+                r.message = "At Ontology Node creation";
+                return r;
+            }
+
             PelletReasoner reasoner = PelletReasonerFactory.getInstance().createReasoner(ont);
 
-            for (OWLClass c : ont.getClassesInSignature(false /*exclude imports closure*/)) {
-                link(c, reasoner);
+            tx = cs.beginTx();
+            try {
+                for (OWLClass c : ont.getClassesInSignature(false /*exclude imports closure*/)) {
+                    Node cNode = link(c, reasoner);
+                    if (cNode != null)
+                        cNode.createRelationshipTo(ontNode, RelTypes.SOURCE_ONTOLOGY);
+                }
+                tx.success();
+            } finally {
+                tx.finish();
+                // TODO handle error
             }
 
             Result r = new Result();
@@ -242,45 +291,58 @@ public class RegisterSchemaAction {
         from.createRelationshipTo(to, RelTypes.EQUIVALENT_CLASS);
     }
 
-    public void link(OWLClass c, OWLReasoner r) {
+    private Node getKnownOntologiesReferenceNode() {
+        Node ref = cs.getReferenceNode();
+        Relationship ko = ref.getSingleRelationship(RelTypes.ONTOLOGIES_REFERENCE, Direction.OUTGOING);
+        if (ko == null) {
+            Transaction tx = cs.beginTx();
+            try {
+                Node ontRef = cs.createNode();
+                ref.createRelationshipTo(ontRef, RelTypes.ONTOLOGIES_REFERENCE);
+                tx.success();
+                return ontRef;
+            } finally {
+                tx.finish();
+            }
+        }
+        return ko.getEndNode();
+    }
+
+    public Node link(OWLClass c, OWLReasoner r) {
         // shouldn't create a new Node if a ndoe for c already exists
         // FIXME
         Queue<Node> queue = new LinkedList<Node>();
         for (Node root : getRoots()) {
             queue.add(root);
         }
-        Transaction tx = cs.beginTx();
-        try {
-            Node n = cs.createNode();
-            n.setProperty("IRI", c.getIRI().toString());
+        Node n = null;
+        n = cs.createNode();
+        n.setProperty("IRI", c.getIRI().toString());
 
-            boolean linked = false;
-            while (!queue.isEmpty()) {
-                Node x = queue.remove();
-                linked = compareClasses(n, x, r);
-                if (!linked) {
-                    for (Node sub : subclasses(x))
-                        queue.add(sub);
-                }
-                else {
-                    break;
-                }
-            }
-
+        boolean linked = false;
+        while (!queue.isEmpty()) {
+            Node x = queue.remove();
+            linked = compareClasses(n, x, r);
             if (!linked) {
-                System.out.println("No links for " + c.getIRI());
-                addRoot(n);
+                for (Node sub : subclasses(x))
+                    queue.add(sub);
             }
+            else {
+                break;
+            }
+        }
 
-            tx.success();
-        } finally {
-            tx.finish();
+        if (!linked) {
+            System.out.println("No links for " + c.getIRI());
+            addRoot(n);
         }
 
         // no roots can be subclasses of something else
-        System.out.println("Roots len " + getRoots().size());
+        logger.warning("Roots len " + getRoots().size());
         for (Node R : getRoots())
             assert !R.hasRelationship(RelTypes.IS_A, Direction.OUTGOING);
+
+        return n;
     }
 
     private static void registerShutdownHook(final GraphDatabaseService cs) {
