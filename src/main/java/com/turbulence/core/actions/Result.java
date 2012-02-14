@@ -5,6 +5,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Result {
     public boolean success;
-    public int error;
+    public TurbulenceError error;
     public String message;
 }

@@ -26,6 +26,15 @@ import com.turbulence.core.*;
 import com.turbulence.util.*;
 
 public class RegisterSchemaAction {
+    public enum RelTypes implements RelationshipType {
+        ROOT, // a ROOT goes from reference Node (outgoing) -> to Node
+        IS_A,
+        EQUIVALENT_CLASS,
+        SOURCE_ONTOLOGY,
+        KNOWN_ONTOLOGY,
+        ONTOLOGIES_REFERENCE
+    }
+
     private Logger logger;
     private URI schemaURI;
     private OWLOntologyManager ontologyManager;
@@ -72,23 +81,17 @@ public class RegisterSchemaAction {
 
             Result r = new Result();
             r.success = true;
-            r.message = "<yeayayay>";
+            r.message = "yeayayay";
             return r;
         } catch (OWLOntologyCreationException e) {
             // TODO handle this doo doo
             logger.warning("OOCE");
             Result r = new Result();
             r.success = false;
-            r.error = 90; // FIXME
+            r.error = TurbulenceError.ONTOLOGY_CREATION_FAILED;
             r.message = e.getMessage();
             return r;
         }
-    }
-
-    public enum RelTypes implements RelationshipType {
-        ROOT, // a ROOT goes from reference Node (outgoing) -> to Node
-        IS_A,
-        EQUIVALENT_CLASS
     }
 
     private Collection<Node> getSiblings(Node N) {

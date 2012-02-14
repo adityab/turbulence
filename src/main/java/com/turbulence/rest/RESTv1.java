@@ -27,13 +27,13 @@ public class RESTv1 {
             return ret.get();
         } catch (ExecutionException e) {
             Result r = new Result();
-            r.error = 45;
+            r.error = TurbulenceError.UNKNOWN_ERROR;
             r.message = e.getMessage();
             e.printStackTrace();
             return r;
         } catch (InterruptedException e) {
             Result r = new Result();
-            r.error = 46;
+            r.error = TurbulenceError.THREAD_INTERRUPTED;
             r.message = e.getMessage();
             e.printStackTrace();
             return r;
