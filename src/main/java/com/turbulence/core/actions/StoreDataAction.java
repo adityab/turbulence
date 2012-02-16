@@ -27,13 +27,16 @@ public class StoreDataAction implements Action {
     private Logger logger;
     protected StoreDataAction(Document data) {
         logger = Logger.getLogger(this.getClass().getName());
-        NodeList l = data.getChildNodes().item(1).getChildNodes();
-        System.err.println("Nodes " + l.getLength());
-        for (int i = 0; i < l.getLength(); i++) {
-            Node n = l.item(i);
+        for (int i = 0; i < data.getChildNodes().getLength(); i++)
+            recurse(data.getChildNodes().item(i), "");
+    }
 
-            System.err.println(n.getNamespaceURI());
-            System.err.println(n.getNodeName());
+    public void recurse(Node n, String indent) {
+        System.err.println(indent + "nsURI: " + n.getNamespaceURI());
+        System.err.println(indent + "nodeName: " + n.getNodeName());
+        NodeList l = n.getChildNodes();
+        for (int i = 0; i < l.getLength(); i++) {
+            recurse(l.item(i), indent + "  ");
         }
     }
 
