@@ -1,0 +1,596 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://purl.org/NET/c4dm/keys.owl#"
+     xml:base="http://purl.org/NET/c4dm/keys.owl"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <owl:Ontology rdf:about="http://purl.org/NET/c4dm/keys.owl"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Datatypes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#tonic -->
+
+    <owl:ObjectProperty rdf:about="http://purl.org/NET/c4dm/keys.owl#tonic">
+        <rdfs:domain rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#mode -->
+
+    <owl:DatatypeProperty rdf:about="http://purl.org/NET/c4dm/keys.owl#mode">
+        <rdfs:domain rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <rdfs:range>
+            <rdfs:Datatype>
+                <owl:oneOf>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#List"/>
+                        <rdf:first rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</rdf:first>
+                        <rdf:rest>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#List"/>
+                                <rdf:first rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</rdf:first>
+                                <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                            </rdf:Description>
+                        </rdf:rest>
+                    </rdf:Description>
+                </owl:oneOf>
+            </rdfs:Datatype>
+        </rdfs:range>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#wikipedia -->
+
+    <owl:DatatypeProperty rdf:about="http://purl.org/NET/c4dm/keys.owl#wikipedia">
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#anyURI"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#Key -->
+
+    <owl:Class rdf:about="http://purl.org/NET/c4dm/keys.owl#Key"/>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#Note -->
+
+    <owl:Class rdf:about="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#A -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#A">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#AFlat -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#AFlat">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#AFlatMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#AFlatMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/A-flat_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#AFlat"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#AFlatMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#AFlatMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/A-flat_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#AFlat"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#AMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#AMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/A_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#A"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#AMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#AMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/A_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#A"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#ASharp -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#ASharp">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#ASharpMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#ASharpMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/A-sharp_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#ASharp"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#B -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#B">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#BFlat -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#BFlat">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#BFlatMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#BFlatMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/B-flat_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#BFlat"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#BFlatMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#BFlatMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/B-flat_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#BFlat"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#BMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#BMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/B_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#B"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#BMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#BMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/B_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#B"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#C -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#C">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#CFlat -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#CFlat">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#CFlatMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#CFlatMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/C-flat_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#CFlat"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#CMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#CMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/C_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#C"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#CMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#CMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/C_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#C"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#CSharp -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#CSharp">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#CSharpMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#CSharpMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/C-sharp_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#CSharp"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#CSharpMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#CSharpMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/C-sharp_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#CSharp"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#D -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#D">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#DFlat -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#DFlat">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#DFlatMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#DFlatMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/D-flat_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#DFlat"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#DMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#DMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/D_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#D"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#DMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#DMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/D_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#D"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#DSharp -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#DSharp">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#DSharpMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#DSharpMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/D-sharp_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#DSharp"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#E -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#E">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#EFlat -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#EFlat">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#EFlatMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#EFlatMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/E-flat_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#EFlat"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#EFlatMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#EFlatMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/E-flat_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#EFlat"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#EMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#EMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/E_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#E"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#EMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#EMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/E_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#E"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#F -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#F">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#FMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#FMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/F_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#F"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#FMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#FMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/F_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#F"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#FSharp -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#FSharp">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#FSharpMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#FSharpMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/F-sharp_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#FSharp"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#FSharpMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#FSharpMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/F-sharp_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#FSharp"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#G -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#G">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#GFlat -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#GFlat">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#GFlatMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#GFlatMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/G-flat_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#GFlat"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#GMajor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#GMajor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/G_major</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">major</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#G"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#GMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#GMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/G_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#G"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#GSharp -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#GSharp">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Note"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/NET/c4dm/keys.owl#GSharpMinor -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/NET/c4dm/keys.owl#GSharpMinor">
+        <rdf:type rdf:resource="http://purl.org/NET/c4dm/keys.owl#Key"/>
+        <wikipedia rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://en.wikipedia.org/wiki/G-sharp_minor</wikipedia>
+        <mode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">minor</mode>
+        <tonic rdf:resource="http://purl.org/NET/c4dm/keys.owl#GSharp"/>
+    </owl:NamedIndividual>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 3.2.4.1806) http://owlapi.sourceforge.net -->
+

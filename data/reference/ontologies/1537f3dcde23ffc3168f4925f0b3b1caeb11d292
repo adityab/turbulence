@@ -1,0 +1,466 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://purl.org/stuff/rev#"
+     xml:base="http://purl.org/stuff/rev"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:rev="http://purl.org/stuff/rev#"
+     xmlns:foaf="http://xmlns.com/foaf/0.1/"
+     xmlns:status="http://www.w3.org/2003/06/sw-vocab-status/ns#"
+     xmlns:dcmitype="http://purl.org/dc/dcmitype/"
+     xmlns:vann="http://purl.org/vocab/vann/"
+     xmlns:msg0="http://web.resource.org/cc/"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:stuff="http://purl.org/stuff/"
+     xmlns:dct="http://purl.org/dc/terms/"
+     xmlns:data-view="http://www.w3.org/2003/g/data-view#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:review="http://vocab.org/review/">
+    <owl:Ontology rdf:about="http://purl.org/stuff/rev#">
+        <rdfs:label>RDF Review Vocabulary</rdfs:label>
+        <vann:preferredNamespacePrefix>rev</vann:preferredNamespacePrefix>
+        <vann:preferredNamespaceUri>http://purl.org/stuff/rev#</vann:preferredNamespaceUri>
+        <data-view:profileTransformation rdf:resource="http://danja.talis.com/xmlns/rev_2007-11-09/hreview2rdfxml.xsl"/>
+        <status:userdocs rdf:resource="http://vocab.org/review/html"/>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <owl:AnnotationProperty rdf:about="http://web.resource.org/cc/requires"/>
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2003/06/sw-vocab-status/ns#moreinfo"/>
+    <owl:AnnotationProperty rdf:about="http://xmlns.com/foaf/0.1/primaryTopic"/>
+    <owl:AnnotationProperty rdf:about="http://web.resource.org/cc/permits"/>
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2003/06/sw-vocab-status/ns#term_status"/>
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/terms/hasFormat"/>
+    <owl:AnnotationProperty rdf:about="http://web.resource.org/cc/license"/>
+    <owl:AnnotationProperty rdf:about="http://xmlns.com/foaf/0.1/topic"/>
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/elements/1.1/type"/>
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/elements/1.1/format"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Datatypes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/stuff/rev#commenter -->
+
+    <owl:ObjectProperty rdf:about="http://purl.org/stuff/rev#commenter">
+        <rdfs:label>commenter</rdfs:label>
+        <rdfs:comment>The commenter on the review</rdfs:comment>
+        <status:term_status>deprecated</status:term_status>
+        <status:moreinfo>proposed by iterating.com</status:moreinfo>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+        <rdfs:domain rdf:resource="http://purl.org/stuff/rev#Comment"/>
+        <rdfs:domain rdf:resource="http://purl.org/stuff/rev#Feedback"/>
+        <rdfs:range rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.org/stuff/rev#hasComment -->
+
+    <owl:ObjectProperty rdf:about="http://purl.org/stuff/rev#hasComment">
+        <rdfs:label>hasComment</rdfs:label>
+        <rdfs:comment>Used to associate a review with a comment on the review</rdfs:comment>
+        <status:moreinfo>proposed by iterating.com</status:moreinfo>
+        <status:term_status>deprecated</status:term_status>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+        <rdfs:range rdf:resource="http://purl.org/stuff/rev#Comment"/>
+        <rdfs:domain rdf:resource="http://purl.org/stuff/rev#Review"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.org/stuff/rev#hasFeedback -->
+
+    <owl:ObjectProperty rdf:about="http://purl.org/stuff/rev#hasFeedback">
+        <rdfs:label>hasFeedback</rdfs:label>
+        <status:moreinfo>proposed by iterating.com</status:moreinfo>
+        <status:term_status>deprecated</status:term_status>
+        <rdfs:comment>Associates a review with a feedback on the review</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+        <rdfs:range rdf:resource="http://purl.org/stuff/rev#Feedback"/>
+        <rdfs:domain rdf:resource="http://purl.org/stuff/rev#Review"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.org/stuff/rev#hasReview -->
+
+    <owl:ObjectProperty rdf:about="http://purl.org/stuff/rev#hasReview">
+        <rdfs:label xml:lang="en">has Review</rdfs:label>
+        <status:moreinfo>core term</status:moreinfo>
+        <status:term_status>stable</status:term_status>
+        <rdfs:comment xml:lang="en">Associates a work with a a review</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+        <rdfs:range rdf:resource="http://purl.org/stuff/rev#Review"/>
+        <rdfs:domain rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.org/stuff/rev#reviewer -->
+
+    <owl:ObjectProperty rdf:about="http://purl.org/stuff/rev#reviewer">
+        <rdfs:label xml:lang="en">reviewer</rdfs:label>
+        <rdfs:comment xml:lang="en">The person that has written the review</rdfs:comment>
+        <status:term_status>stable</status:term_status>
+        <status:moreinfo>core term</status:moreinfo>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+        <rdfs:domain rdf:resource="http://purl.org/stuff/rev#Review"/>
+        <rdfs:range rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/date -->
+
+    <owl:DatatypeProperty rdf:about="http://purl.org/dc/elements/1.1/date"/>
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/description -->
+
+    <owl:DatatypeProperty rdf:about="http://purl.org/dc/elements/1.1/description"/>
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/title -->
+
+    <owl:DatatypeProperty rdf:about="http://purl.org/dc/elements/1.1/title"/>
+    
+
+
+    <!-- http://purl.org/stuff/rev#positiveVotes -->
+
+    <owl:DatatypeProperty rdf:about="http://purl.org/stuff/rev#positiveVotes">
+        <rdfs:label>positiveVotes</rdfs:label>
+        <rdfs:comment>Number of positive usefulness votes (integer)</rdfs:comment>
+        <status:term_status>deprecated</status:term_status>
+        <status:moreinfo>proposed by iterating.com</status:moreinfo>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+        <rdfs:domain rdf:resource="http://purl.org/stuff/rev#Review"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://purl.org/stuff/rev#rating -->
+
+    <owl:DatatypeProperty rdf:about="http://purl.org/stuff/rev#rating">
+        <rdfs:label xml:lang="en">rating</rdfs:label>
+        <status:term_status>stable</status:term_status>
+        <rdfs:comment xml:lang="en">A numeric value</rdfs:comment>
+        <status:moreinfo>core term</status:moreinfo>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://purl.org/stuff/rev#text -->
+
+    <owl:DatatypeProperty rdf:about="http://purl.org/stuff/rev#text">
+        <rdfs:label xml:lang="en">text</rdfs:label>
+        <status:moreinfo>core term</status:moreinfo>
+        <status:term_status>stable</status:term_status>
+        <rdfs:comment xml:lang="en">The text of the review</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://purl.org/stuff/rev#title -->
+
+    <owl:DatatypeProperty rdf:about="http://purl.org/stuff/rev#title">
+        <rdfs:label>title</rdfs:label>
+        <rdfs:comment>The title of the review</rdfs:comment>
+        <status:moreinfo>proposed by iterating.com</status:moreinfo>
+        <status:term_status>deprecated</status:term_status>
+        <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/elements/1.1/title"/>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+        <rdfs:domain rdf:resource="http://purl.org/stuff/rev#Review"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://purl.org/stuff/rev#totalVotes -->
+
+    <owl:DatatypeProperty rdf:about="http://purl.org/stuff/rev#totalVotes">
+        <rdfs:label>totalVotes</rdfs:label>
+        <rdfs:comment>Number of usefulness votes (integer)</rdfs:comment>
+        <status:moreinfo>proposed by iterating.com</status:moreinfo>
+        <status:term_status>deprecated</status:term_status>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+        <rdfs:domain rdf:resource="http://purl.org/stuff/rev#Review"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://purl.org/stuff/rev#type -->
+
+    <owl:DatatypeProperty rdf:about="http://purl.org/stuff/rev#type">
+        <rdfs:label>type</rdfs:label>
+        <rdfs:comment>The type of media of a work under review</rdfs:comment>
+        <status:term_status>deprecated</status:term_status>
+        <status:moreinfo>core term</status:moreinfo>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/dc/dcmitype/Text -->
+
+    <owl:Class rdf:about="http://purl.org/dc/dcmitype/Text"/>
+    
+
+
+    <!-- http://purl.org/stuff/rev#Comment -->
+
+    <owl:Class rdf:about="http://purl.org/stuff/rev#Comment">
+        <rdfs:label>Comment</rdfs:label>
+        <status:moreinfo>proposed by iterating.com</status:moreinfo>
+        <status:term_status>deprecated</status:term_status>
+        <rdfs:comment>A comment on a review</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.org/stuff/rev#Feedback -->
+
+    <owl:Class rdf:about="http://purl.org/stuff/rev#Feedback">
+        <rdfs:label>Feedback</rdfs:label>
+        <status:moreinfo>proposed by iterating.com</status:moreinfo>
+        <status:term_status>testing</status:term_status>
+        <rdfs:comment>Feedback on the review. Expresses whether the review was useful or not</rdfs:comment>
+        <status:term_status>deprecated</status:term_status>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.org/stuff/rev#Review -->
+
+    <owl:Class rdf:about="http://purl.org/stuff/rev#Review">
+        <rdfs:label xml:lang="en">Review</rdfs:label>
+        <status:term_status>stable</status:term_status>
+        <rdfs:comment xml:lang="en">A review of an work</rdfs:comment>
+        <status:moreinfo>core term</status:moreinfo>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+    </owl:Class>
+    
+
+
+    <!-- http://web.resource.org/cc/License -->
+
+    <owl:Class rdf:about="http://web.resource.org/cc/License"/>
+    
+
+
+    <!-- http://web.resource.org/cc/Work -->
+
+    <owl:Class rdf:about="http://web.resource.org/cc/Work"/>
+    
+
+
+    <!-- http://www.w3.org/2000/01/rdf-schema#Class -->
+
+    <owl:Class rdf:about="http://www.w3.org/2000/01/rdf-schema#Class"/>
+    
+
+
+    <!-- http://www.w3.org/2000/01/rdf-schema#Resource -->
+
+    <owl:Class rdf:about="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+    
+
+
+    <!-- http://xmlns.com/foaf/0.1/Agent -->
+
+    <owl:Class rdf:about="http://xmlns.com/foaf/0.1/Agent"/>
+    
+
+
+    <!-- http://xmlns.com/foaf/0.1/Document -->
+
+    <owl:Class rdf:about="http://xmlns.com/foaf/0.1/Document"/>
+    
+
+
+    <!-- http://xmlns.com/foaf/0.1/Person -->
+
+    <owl:Class rdf:about="http://xmlns.com/foaf/0.1/Person"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://creativecommons.org/licenses/by/1.0/ -->
+
+    <owl:NamedIndividual rdf:about="http://creativecommons.org/licenses/by/1.0/">
+        <rdf:type rdf:resource="http://web.resource.org/cc/License"/>
+        <msg0:requires rdf:resource="http://web.resource.org/cc/Attribution"/>
+        <msg0:permits rdf:resource="http://web.resource.org/cc/DerivativeWorks"/>
+        <msg0:permits rdf:resource="http://web.resource.org/cc/Distribution"/>
+        <msg0:requires rdf:resource="http://web.resource.org/cc/Notice"/>
+        <msg0:permits rdf:resource="http://web.resource.org/cc/Reproduction"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/stuff/rev -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/stuff/rev">
+        <rdf:type rdf:resource="http://web.resource.org/cc/Work"/>
+        <msg0:license rdf:resource="http://creativecommons.org/licenses/by/1.0/"/>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/Text"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/stuff/rev# -->
+
+    <owl:Thing rdf:about="http://purl.org/stuff/rev#">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+        <dc:date>2007-11-08</dc:date>
+        <dc:description>Vocabulary for expressing reviews and ratings using the Resource Description Framework. It is compatible with hReview and conforms to OWL Lite</dc:description>
+    </owl:Thing>
+    
+
+
+    <!-- http://purl.org/stuff/rev#maxRating -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/stuff/rev#maxRating">
+        <rdfs:label xml:lang="en">max Rating</rdfs:label>
+        <rdfs:comment xml:lang="en">A numeric value</rdfs:comment>
+        <status:term_status>stable</status:term_status>
+        <status:moreinfo>Introduced by request of Revyu.com</status:moreinfo>
+        <dc:description xml:lang="en">Maximum value for rating property</dc:description>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://purl.org/stuff/rev#minRating -->
+
+    <owl:NamedIndividual rdf:about="http://purl.org/stuff/rev#minRating">
+        <rdfs:label xml:lang="en">min Rating</rdfs:label>
+        <status:term_status>stable</status:term_status>
+        <rdfs:comment xml:lang="en">A numeric value</rdfs:comment>
+        <status:moreinfo>Introduced by request of Revyu.com</status:moreinfo>
+        <dc:description xml:lang="en">Minimum value for rating property</dc:description>
+        <rdfs:isDefinedBy rdf:resource="http://purl.org/stuff/rev#"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://vocab.org/review/terms.html -->
+
+    <foaf:Document rdf:about="http://vocab.org/review/terms.html">
+        <rdf:type rdf:resource="http://purl.org/dc/dcmitype/Text"/>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+        <rdfs:label>HTML</rdfs:label>
+        <dc:format>text/html</dc:format>
+    </foaf:Document>
+    
+
+
+    <!-- http://vocab.org/review/terms.json -->
+
+    <foaf:Document rdf:about="http://vocab.org/review/terms.json">
+        <rdf:type rdf:resource="http://purl.org/dc/dcmitype/Text"/>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+        <rdfs:label>JSON</rdfs:label>
+        <dc:format>application/json</dc:format>
+    </foaf:Document>
+    
+
+
+    <!-- http://vocab.org/review/terms.rdf -->
+
+    <foaf:Document rdf:about="http://vocab.org/review/terms.rdf">
+        <rdf:type rdf:resource="http://purl.org/dc/dcmitype/Text"/>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+        <foaf:primaryTopic rdf:resource="http://purl.org/stuff/rev#"/>
+        <foaf:topic rdf:resource="http://purl.org/stuff/rev#"/>
+        <dct:hasFormat rdf:resource="http://vocab.org/review/terms.html"/>
+        <dct:hasFormat rdf:resource="http://vocab.org/review/terms.json"/>
+        <dct:hasFormat rdf:resource="http://vocab.org/review/terms.turtle"/>
+    </foaf:Document>
+    
+
+
+    <!-- http://vocab.org/review/terms.turtle -->
+
+    <foaf:Document rdf:about="http://vocab.org/review/terms.turtle">
+        <rdf:type rdf:resource="http://purl.org/dc/dcmitype/Text"/>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+        <rdfs:label>Turtle</rdfs:label>
+        <dc:format>text/plain</dc:format>
+    </foaf:Document>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 3.2.4.1806) http://owlapi.sourceforge.net -->
+
