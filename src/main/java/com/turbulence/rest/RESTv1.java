@@ -7,21 +7,19 @@ import java.util.concurrent.Future;
 
 import javax.ws.rs.*;
 
+import org.w3c.dom.Document;
+
 import com.turbulence.core.actions.*;
 import com.turbulence.core.TurbulenceDriver;
 
 @Path("/api/1")
 public class RESTv1 {
-    @POST
-    @Path("/register_schema")
-    @Consumes("application/x-www-form-urlencoded")
-    @Produces("application/xml")
-    public Result registerSchemaURL(@FormParam("url") URI url) {
-        final RegisterSchemaAction act = ActionFactory.createRegisterSchemaAction(url);
+
+    private Result execute(final Action action) {
         try {
             Future<Result> ret = TurbulenceDriver.submit(new Callable<Result>() {
                 public Result call() {
-                    return act.perform();
+                    return action.perform();
                 }
             });
             return ret.get();
@@ -38,5 +36,23 @@ public class RESTv1 {
             e.printStackTrace();
             return r;
         }
+    }
+
+    @POST
+    @Path("/register_schema")
+    @Consumes("application/x-www-form-urlencoded")
+    @Produces("application/xml")
+    public Result registerSchemaURL(@FormParam("url") URI url) {
+        final RegisterSchemaAction act = ActionFactory.createRegisterSchemaAction(url);
+        return execute(act);
+    }
+
+    @POST
+    @Path("/store_data")
+    @Consumes("application/xml")
+    @Produces("application/xml")
+    public Result storeData(Document doc) {
+        final StoreDataAction act = ActionFactory.createStoreDataAction(doc);
+        return execute(act);
     }
 }
