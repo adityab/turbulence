@@ -141,8 +141,12 @@ public class RegisterSchemaAction implements Action {
 
                 for (OWLAxiom c : ont.getAxioms(AxiomType.DATA_PROPERTY_DOMAIN)) {
                     OWLDataPropertyDomainAxiom ax = (OWLDataPropertyDomainAxiom) c;
+                    if (ax.getProperty().isAnonymous())
+                        continue;
+                    if (ax.getDomain().isAnonymous())
+                        continue;
                     for (OWLDataRange range : ax.getProperty().getRanges(ont)) {
-                        //createDataPropertyRelationship(ax.getDomain(), range);
+                        createDataProperty(iri, ax.getProperty().asOWLDataProperty(), ax.getDomain().asOWLClass(), range);
                     }
                 }
                 tx.success();
@@ -396,8 +400,24 @@ public class RegisterSchemaAction implements Action {
 
         Transaction tx = cs.beginTx();
         try {
+            // TODO set column family location on domain
             Relationship rel = domainNode.createRelationshipTo(rangeNode, RelTypes.OBJECT_RELATIONSHIP);
             rel.setProperty("IRI", property.getIRI().toString());
+            tx.success();
+        } finally {
+            tx.finish();
+        }
+    }
+
+    private void createDataProperty(IRI ontologyIRI, OWLDataProperty property, OWLClass domain, OWLDataRange range) {
+        Node domainNode = getClassNode(ontologyIRI, domain);
+        if (domainNode == null)
+            return;
+
+        Transaction tx = cs.beginTx();
+        try {
+            // TODO set to column family location
+            //domainNode.setProperty(property.getIRI().toString());
             tx.success();
         } finally {
             tx.finish();
