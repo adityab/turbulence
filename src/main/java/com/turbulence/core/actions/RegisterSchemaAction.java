@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.Queue;
 import java.util.LinkedList;
@@ -26,14 +27,16 @@ import com.clarkparsia.pellet.owlapiv3.*;
 import com.turbulence.core.*;
 import com.turbulence.util.*;
 
-public class RegisterSchemaAction {
+public class RegisterSchemaAction implements Action {
     public enum RelTypes implements RelationshipType {
         ROOT, // a ROOT goes from reference Node (outgoing) -> to Node
         IS_A,
         EQUIVALENT_CLASS,
         SOURCE_ONTOLOGY,
         KNOWN_ONTOLOGY,
-        ONTOLOGIES_REFERENCE
+        ONTOLOGIES_REFERENCE,
+        OBJECT_RELATIONSHIP,
+        DATATYPE_RELATIONSHIP
     }
 
     private Logger logger;
@@ -86,7 +89,7 @@ public class RegisterSchemaAction {
                 ontNode.setProperty("IRI", iri.toString());
                 // put if absent will return the OLD node if one existed, so
                 // that we don't have duplicates
-                Node previous = ontologyIndex.putIfAbsent(ontNode, KNOWN_ONTOLOGY_KEY, iri);
+                Node previous = ontologyIndex.putIfAbsent(ontNode, KNOWN_ONTOLOGY_KEY, iri.toString());
 
                 if (previous != null) {
                     // abort this entire RegisterSchema operation, because
@@ -121,6 +124,26 @@ public class RegisterSchemaAction {
                     Node cNode = link(c, reasoner);
                     if (cNode != null)
                         cNode.createRelationshipTo(ontNode, RelTypes.SOURCE_ONTOLOGY);
+                }
+
+                for (OWLAxiom c : ont.getAxioms(AxiomType.OBJECT_PROPERTY_DOMAIN)) {
+                    OWLObjectPropertyDomainAxiom ax = (OWLObjectPropertyDomainAxiom) c;
+                    if (ax.getProperty().isAnonymous())
+                        continue;
+                    if (ax.getDomain().isAnonymous())
+                        continue;
+                    for (OWLClassExpression range : ax.getProperty().getRanges(ont)) {
+                        if (range.isAnonymous())
+                            continue;
+                        createObjectPropertyRelationship(iri, ax.getProperty().asOWLObjectProperty(), ax.getDomain().asOWLClass(), range.asOWLClass());
+                    }
+                }
+
+                for (OWLAxiom c : ont.getAxioms(AxiomType.DATA_PROPERTY_DOMAIN)) {
+                    OWLDataPropertyDomainAxiom ax = (OWLDataPropertyDomainAxiom) c;
+                    for (OWLDataRange range : ax.getProperty().getRanges(ont)) {
+                        //createDataPropertyRelationship(ax.getDomain(), range);
+                    }
                 }
                 tx.success();
             } finally {
@@ -308,7 +331,25 @@ public class RegisterSchemaAction {
         return ko.getEndNode();
     }
 
-    public Node link(OWLClass c, OWLReasoner r) {
+    private Node getClassNode(IRI ontologyIRI, OWLClass clazz) {
+        IRI iri = clazz.getIRI();
+        Index<Node> index = cs.index().forNodes("ontologyIndex");
+        Node ontNode = index.get(KNOWN_ONTOLOGY_KEY, ontologyIRI).getSingle();
+        if (ontNode == null)
+            return null;
+
+        final IRI clazzIRI = clazz.getIRI();
+        Traverser trav = ontNode.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, new ReturnableEvaluator() {
+            public boolean isReturnableNode(TraversalPosition pos) {
+                return pos.notStartNode() && pos.currentNode().getProperty("IRI").equals(clazzIRI.toString());
+            }
+        }, RelTypes.SOURCE_ONTOLOGY, Direction.INCOMING);
+
+        Iterator<Node> iter = trav.iterator();
+        return iter.hasNext() ? iter.next() : null;
+    }
+
+    private Node link(OWLClass c, OWLReasoner r) {
         // shouldn't create a new Node if a ndoe for c already exists
         // FIXME
         Queue<Node> queue = new LinkedList<Node>();
@@ -343,6 +384,24 @@ public class RegisterSchemaAction {
             assert !R.hasRelationship(RelTypes.IS_A, Direction.OUTGOING);
 
         return n;
+    }
+
+    private void createObjectPropertyRelationship(IRI ontologyIRI, OWLObjectProperty property, OWLClass domain, OWLClass range) {
+        Node domainNode = getClassNode(ontologyIRI, domain);
+        if (domainNode == null)
+            return;
+        Node rangeNode = getClassNode(ontologyIRI, range);
+        if (rangeNode == null)
+            return;
+
+        Transaction tx = cs.beginTx();
+        try {
+            Relationship rel = domainNode.createRelationshipTo(rangeNode, RelTypes.OBJECT_RELATIONSHIP);
+            rel.setProperty("IRI", property.getIRI().toString());
+            tx.success();
+        } finally {
+            tx.finish();
+        }
     }
 
     private static void registerShutdownHook(final GraphDatabaseService cs) {
