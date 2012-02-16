@@ -10,6 +10,11 @@
 
     <repositories>
         <repository>
+            <id>maven</id>
+            <name>Maven Central</name>
+            <url>http://repo1.maven.org/maven2/</url>
+        </repository>
+        <repository>
             <id>activemath</id>
             <name>ATerm repo</name>
             <url>http://www.activemath.org/public-repository/</url>
@@ -74,6 +79,12 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>20041127.091804</version>
+        </dependency>
+
+        <dependency>
+            <groupId>me.prettyprint</groupId>
+            <artifactId>hector-core</artifactId>
+            <version>1.0-3</version>
         </dependency>
     </dependencies>
 
