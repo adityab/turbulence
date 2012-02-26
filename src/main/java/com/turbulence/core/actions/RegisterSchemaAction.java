@@ -28,7 +28,7 @@ import com.turbulence.core.*;
 import com.turbulence.util.*;
 
 public class RegisterSchemaAction implements Action {
-    public enum RelTypes implements RelationshipType {
+    public static enum RelTypes implements RelationshipType {
         ROOT, // a ROOT goes from reference Node (outgoing) -> to Node
         IS_A,
         EQUIVALENT_CLASS,
