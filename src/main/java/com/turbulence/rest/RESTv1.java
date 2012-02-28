@@ -55,4 +55,13 @@ public class RESTv1 {
         final StoreDataAction act = ActionFactory.createStoreDataAction(doc);
         return execute(act);
     }
+
+    @POST
+    @Path("/query")
+    @Produces("application/xml")
+    public Result query(String body) {
+        System.err.println("QUERY:" + body);
+        final QueryAction act = ActionFactory.createQueryAction(body);
+        return execute(act);
+    }
 }

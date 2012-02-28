@@ -11,4 +11,8 @@ public class ActionFactory {
     public static StoreDataAction createStoreDataAction(Document data) {
         return new StoreDataAction(data);
     }
+
+    public static QueryAction createQueryAction(String query) {
+        return new QueryAction(query);
+    }
 }
