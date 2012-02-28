@@ -25,8 +25,6 @@ import org.jdom.*;
 import org.jdom.input.DOMBuilder;
 import org.jdom.output.XMLOutputter;
 
-import com.clarkparsia.pellet.owlapiv3.*;
-
 import me.prettyprint.cassandra.model.*;
 import me.prettyprint.cassandra.serializers.*;
 import me.prettyprint.cassandra.service.*;

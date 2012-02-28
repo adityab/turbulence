@@ -32,7 +32,6 @@ import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.Node;
 import org.semanticweb.owlapi.util.SimpleIRIMapper;
 import org.semanticweb.owlapi.util.*;
-import com.clarkparsia.pellet.owlapiv3.*;
 
 import org.json.*;
 

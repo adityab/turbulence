@@ -20,11 +20,6 @@
             <url>http://www.activemath.org/public-repository/</url>
         </repository>
         <repository>
-            <id>aksw</id>
-            <name>Pellet repo</name>
-            <url>http://maven.aksw.org/archiva/repository/internal/</url>
-        </repository>
-        <repository>
             <id>berkeleybop</id>
             <name>owlapi repo</name>
             <url>http://code.berkeleybop.org/maven/repository/</url>
@@ -43,12 +38,6 @@
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j</artifactId>
             <version>1.6</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.owldl</groupId>
-            <artifactId>pellet</artifactId>
-            <version>2.3.0</version>
         </dependency>
 
         <dependency>
@@ -91,6 +80,12 @@
             <groupId>org.jdom</groupId>
             <artifactId>jdom</artifactId>
             <version>1.1.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.semanticweb</groupId>
+            <artifactId>HermiT</artifactId>
+            <version>1.3.6</version>
         </dependency>
     </dependencies>
 
