@@ -16,6 +16,7 @@ Contents:
    consumers
    distributeddb
    schemas
+   queries
 
    running
    configuration

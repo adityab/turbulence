@@ -93,6 +93,48 @@ On success:
         <success/>
     </response>
 
+Query
+^^^^^
+
+Run a query against the data set in the database. Returns XML data which
+matches the `query <queries>`_
+
+    |endpoint|/**query**
+
+**METHOD**: POST
+
+The POST body is the SPARQL query.
+
+Response
+~~~~~~~~
+
+On success:
+
+.. code-block:: xml
+
+    <response>
+        <data>
+            <xmlFragment1>
+                ...
+            </xmlFragment1>
+            <xmlFragment2>
+                ...
+            </xmlFragment2>
+            <xmlFragment3>
+                ...
+            </xmlFragment3>
+            ...
+        </data>
+    </response>
+
+On error:
+
+.. code-block:: xml
+
+    <response>
+        <error>message</error>
+    </response>
+
 Error codes
 -----------
 
