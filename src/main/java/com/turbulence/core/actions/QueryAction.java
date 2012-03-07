@@ -45,6 +45,7 @@ class Visitor extends ElementVisitorBase {
     public void visit(ElementFilter el) {
         // TODO Auto-generated method stub
         System.err.println("filter");
+        Expr exp = el.getExpr();
     }
 
     @Override
@@ -78,7 +79,17 @@ class Visitor extends ElementVisitorBase {
         Iterator<TriplePath> trips = el.patternElts();
         while (trips.hasNext()) {
             Triple t = trips.next().asTriple();
-            System.err.println(t.getSubject().getName() + " " + t.getPredicate().getURI() + " " + t.getObject().getName());
+            //System.err.println(t.getSubject().getURI() + " " + t.getPredicate().getURI() + " " + t.getObject().getName());
+            Node obj = t.getObject();
+            if (obj.isURI()) {
+                System.err.println("Object " + obj.getURI());
+            }
+            else if (obj.isVariable()) {
+                System.err.println("Object " + obj.getName());
+            }
+            else if (obj.isLiteral()) {
+                System.err.println("Object " + obj.getLiteralValue());
+            }
         }
     }
 
