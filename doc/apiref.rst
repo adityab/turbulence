@@ -63,8 +63,6 @@ or
 Possible errors
 """""""""""""""
 
-`
-
 Post data
 ^^^^^^^^^
 
@@ -72,7 +70,7 @@ Every fragment sent from a remote endpoint should contain the schema URL that
 the data fragment conforms to. Alternatively the schema URL may be sent as
 a parameter.
 
-    |endpoint|/**add_data**
+    |endpoint|/**store_data**
 
 Options
 ~~~~~~~
