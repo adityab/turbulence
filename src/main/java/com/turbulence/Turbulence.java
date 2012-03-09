@@ -1,7 +1,5 @@
 package com.turbulence;
 
-import java.util.logging.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -16,6 +14,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Executors;
 
 import javax.xml.parsers.*;
+
+import org.apache.log4j.BasicConfigurator;
 
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
@@ -43,15 +43,12 @@ public class Turbulence {
     private HttpServer httpServer;
     private BlockingQueue<String> exitQueue;
 
-    private Logger logger;
-
     private static enum Rels implements RelationshipType {
         IS_A,
         ASSOCIATION
     }
 
     private Turbulence(Config config) {
-        logger = Logger.getLogger(this.getClass().getName());
         exitQueue = new SynchronousQueue<String>();
         // create the clusterspace
         setupDriver(config);
@@ -88,6 +85,7 @@ public class Turbulence {
     }
 
     public static void main(String[] args) {
+        BasicConfigurator.configure();
         // TODO: read the config
         // find config file by parsing options
         // pass config parser instance to HW
