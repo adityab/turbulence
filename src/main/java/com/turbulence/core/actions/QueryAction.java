@@ -5,10 +5,24 @@ import org.apache.xerces.impl.xpath.regex.RegularExpression;
 import java.util.*;
 
 import com.hp.hpl.jena.graph.*;
+
+import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.DatasetFactory;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.ResultSetFormatter;
+
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.sparql.core.*;
+
+import com.hp.hpl.jena.sparql.expr.Expr;
 import com.hp.hpl.jena.sparql.syntax.*;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryFactory;
+
+import com.turbulence.core.ClusterSpaceJenaGraph;
 
 class Visitor extends ElementVisitorBase {
     @Override
@@ -137,13 +151,21 @@ public class QueryAction implements Action {
 
 	public Result perform() {
         Query q = QueryFactory.create(query);
-        System.err.println("project variables");
+
+        Model model = ModelFactory.createModelForGraph(new ClusterSpaceJenaGraph());
+        QueryExecution exec = QueryExecutionFactory.create(q, model);
+        ResultSet result = exec.execSelect();
+
+        System.err.println("Result ---");
+        System.err.println(ResultSetFormatter.asText(result));
+        /*System.err.println("project variables");
         for (Var v : q.getProjectVars()) {
             System.err.println(v.getName());
         }
 
         Element qpat = q.getQueryPattern();
         qpat.visit(new Visitor());
+        return null;*/
         return null;
 	}
 }
