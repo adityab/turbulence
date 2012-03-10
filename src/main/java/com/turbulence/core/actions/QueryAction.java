@@ -156,8 +156,9 @@ public class QueryAction implements Action {
         QueryExecution exec = QueryExecutionFactory.create(q, model);
         ResultSet result = exec.execSelect();
 
-        System.err.println("Result ---");
-        System.err.println(ResultSetFormatter.asText(result));
+        Result r = new Result();
+        r.success = true;
+        ResultSetFormatter.outputAsRDF("TURTLE", result);
         /*System.err.println("project variables");
         for (Var v : q.getProjectVars()) {
             System.err.println(v.getName());
