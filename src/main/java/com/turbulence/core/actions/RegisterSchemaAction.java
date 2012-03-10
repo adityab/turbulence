@@ -24,7 +24,7 @@ import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 
-import org.semanticweb.HermiT.Reasoner;
+import com.clarkparsia.pellet.owlapiv3.*;
 
 import com.turbulence.core.*;
 import com.turbulence.util.*;
@@ -121,7 +121,7 @@ public class RegisterSchemaAction implements Action {
                 return r;
             }
 
-            Reasoner reasoner = new Reasoner(ont);
+            OWLReasoner reasoner = PelletReasonerFactory.getInstance().createReasoner(ont);
             tx = cs.beginTx();
             try {
                 for (OWLClass c : ont.getClassesInSignature(false /*exclude imports closure*/)) {
