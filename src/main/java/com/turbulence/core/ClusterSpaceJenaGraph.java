@@ -1,10 +1,13 @@
 package com.turbulence.core;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.collections.IteratorUtils;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -13,9 +16,12 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.StopEvaluator;
 
-import org.neo4j.graphdb.TraversalPosition;
+import org.neo4j.graphdb.traversal.Evaluators;
 
+import org.neo4j.graphdb.TraversalPosition;
 import org.neo4j.graphdb.Traverser;
+
+import org.neo4j.kernel.Traversal;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
@@ -27,11 +33,13 @@ import com.hp.hpl.jena.util.iterator.NiceIterator;
 import com.turbulence.core.actions.RegisterSchemaAction;
 
 class ClusterSpaceJenaIterator extends NiceIterator<Triple> {
-    private final Iterator<org.neo4j.graphdb.Node> internal;
+    private static final Log logger =
+        LogFactory.getLog(ClusterSpaceJenaIterator.class);
+    private final Iterator<org.neo4j.graphdb.Relationship> internal;
     /**
      * Constructs a new instance.
      */
-    public ClusterSpaceJenaIterator(Iterator<org.neo4j.graphdb.Node> it)
+    public ClusterSpaceJenaIterator(Iterator<org.neo4j.graphdb.Relationship> it)
     {
         internal = it;
     }
@@ -41,11 +49,12 @@ class ClusterSpaceJenaIterator extends NiceIterator<Triple> {
 	}
 
 	public Triple next() {
-	    org.neo4j.graphdb.Node n = internal.next();
+	    org.neo4j.graphdb.Relationship rel = internal.next();
+	    logger.warn(rel.getStartNode().getProperty("IRI") + "--" + rel.getType().name() + "--" + rel.getEndNode().getProperty("IRI"));
 	    // TODO: should actually return proper SVO
-        return Triple.create(Node.createURI((String)n.getProperty("IRI")),
-                             Node.createURI("http://www.w3.org/2000/01/rdf-schema#subClassOf"),
-                             Node.createURI("http://purl.org/dc/terms/Agent"));
+        return Triple.create(Node.createURI((String)rel.getStartNode().getProperty("IRI")),
+                             Node.createURI((String)rel.getProperty("IRI", rel.getType().name())), // TODO deal with IS_A
+                             Node.createURI((String)rel.getEndNode().getProperty("IRI")));
 	}
 }
 
@@ -63,17 +72,37 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         cs = TurbulenceDriver.getClusterSpaceDB();
     }
 
-    protected ExtendedIterator<Triple> graphBaseFind(TripleMatch triple) {
-        logger.warn(triple.getMatchSubject() + " " + triple.getMatchPredicate() + " " + triple.getMatchObject());
-
-        Node pred = triple.getMatchPredicate();
+    protected ExtendedIterator<Triple> graphBaseFind(TripleMatch tm) {
+        Triple triple = tm.asTriple();
+        logger.warn(triple.getSubject() + " " + triple.getPredicate() + " " + triple.getObject());
+        Node pred = triple.getPredicate();
 
         if (pred.isURI()
             && pred.getURI().equals("http://www.w3.org/2000/01/rdf-schema#subClassOf")) {
             logger.warn("IS_A");
 
-            Node obj = triple.getMatchObject();
-            assert obj.isURI();
+            Node obj = triple.getObject();
+
+            if (obj == Node.ANY) {
+                List<Iterator> rootIterators = new ArrayList<Iterator>();
+                for (org.neo4j.graphdb.Node root : Traversal.description()
+                        .breadthFirst()
+                        .evaluator(Evaluators.atDepth(1))
+                        .relationships(RegisterSchemaAction.RelTypes.ROOT)
+                        .traverse(cs.getReferenceNode())
+                        .nodes()) {
+                    org.neo4j.graphdb.traversal.Traverser trav = Traversal.description()
+                        .breadthFirst()
+                        .evaluator(Evaluators.all())
+                        .relationships(RegisterSchemaAction.RelTypes.IS_A, Direction.INCOMING)
+                        .relationships(RegisterSchemaAction.RelTypes.EQUIVALENT_CLASS, Direction.BOTH)
+                        .traverse(root);
+                    rootIterators.add(trav.relationships().iterator());
+                }
+
+                return new ClusterSpaceJenaIterator(IteratorUtils.chainedIterator(rootIterators));
+            }
+            logger.warn(obj.isConcrete() + " | " + obj.isVariable() + " | " + obj.isBlank() + " | " + obj.isLiteral() + " | " + obj.isURI() + " | " + (obj == Node.ANY));
 
             final String uri = obj.getURI();
             // find the object in the cluster space
@@ -100,13 +129,14 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             org.neo4j.graphdb.Node cNode = trav.iterator().next();
 
             // process IS_A
-            Traverser isATrav = cNode.traverse(Traverser.Order.BREADTH_FIRST, 
-                    StopEvaluator.END_OF_GRAPH,
-                    ReturnableEvaluator.ALL,
-                    RegisterSchemaAction.RelTypes.IS_A, Direction.INCOMING,
-                    RegisterSchemaAction.RelTypes.EQUIVALENT_CLASS, Direction.BOTH);
+            org.neo4j.graphdb.traversal.Traverser isATrav = Traversal.description()
+                                .breadthFirst()
+                                .relationships(RegisterSchemaAction.RelTypes.IS_A, Direction.INCOMING)
+                                .relationships(RegisterSchemaAction.RelTypes.EQUIVALENT_CLASS, Direction.BOTH)
+                                .evaluator(Evaluators.all())
+                                .traverse(cNode);
 
-            return new ClusterSpaceJenaIterator(isATrav.iterator());
+            return new ClusterSpaceJenaIterator(isATrav.relationships().iterator());
         }
 
         return null;
