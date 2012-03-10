@@ -79,8 +79,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
 
         if (pred.isURI()
             && pred.getURI().equals("http://www.w3.org/2000/01/rdf-schema#subClassOf")) {
-            logger.warn("IS_A");
-
             Node obj = triple.getObject();
 
             if (obj == Node.ANY) {
@@ -88,14 +86,14 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 for (org.neo4j.graphdb.Node root : Traversal.description()
                         .breadthFirst()
                         .evaluator(Evaluators.atDepth(1))
-                        .relationships(RegisterSchemaAction.RelTypes.ROOT)
+                        .relationships(RegisterSchemaAction.InternalRelTypes.ROOT)
                         .traverse(cs.getReferenceNode())
                         .nodes()) {
                     org.neo4j.graphdb.traversal.Traverser trav = Traversal.description()
                         .breadthFirst()
                         .evaluator(Evaluators.all())
-                        .relationships(RegisterSchemaAction.RelTypes.IS_A, Direction.INCOMING)
-                        .relationships(RegisterSchemaAction.RelTypes.EQUIVALENT_CLASS, Direction.BOTH)
+                        .relationships(RegisterSchemaAction.PublicRelTypes.IS_A, Direction.INCOMING)
+                        .relationships(RegisterSchemaAction.PublicRelTypes.EQUIVALENT_CLASS, Direction.BOTH)
                         .traverse(root);
                     rootIterators.add(trav.relationships().iterator());
                 }
@@ -122,7 +120,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 public boolean isReturnableNode(TraversalPosition pos) {
                     return ((String)pos.currentNode().getProperty("IRI")).equals(uri);
                 }
-            }, RegisterSchemaAction.RelTypes.SOURCE_ONTOLOGY, Direction.INCOMING);
+            }, RegisterSchemaAction.InternalRelTypes.SOURCE_ONTOLOGY, Direction.INCOMING);
 
             assert trav.getAllNodes().size() == 1;
 
@@ -131,8 +129,8 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             // process IS_A
             org.neo4j.graphdb.traversal.Traverser isATrav = Traversal.description()
                                 .breadthFirst()
-                                .relationships(RegisterSchemaAction.RelTypes.IS_A, Direction.INCOMING)
-                                .relationships(RegisterSchemaAction.RelTypes.EQUIVALENT_CLASS, Direction.BOTH)
+                                .relationships(RegisterSchemaAction.PublicRelTypes.IS_A, Direction.INCOMING)
+                                .relationships(RegisterSchemaAction.PublicRelTypes.EQUIVALENT_CLASS, Direction.BOTH)
                                 .evaluator(Evaluators.all())
                                 .traverse(cNode);
 
