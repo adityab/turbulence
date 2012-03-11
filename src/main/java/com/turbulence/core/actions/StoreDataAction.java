@@ -4,21 +4,8 @@ import java.util.Arrays;
 
 import java.util.logging.Logger;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Queue;
 import java.util.List;
-import java.util.LinkedList;
 import java.util.UUID;
-
-import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.model.*;
-import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.reasoner.NodeSet;
 
 import org.w3c.dom.Document;
 import org.jdom.*;
@@ -33,9 +20,6 @@ import me.prettyprint.hector.api.*;
 import me.prettyprint.hector.api.ddl.*;
 import me.prettyprint.hector.api.exceptions.*;
 import me.prettyprint.hector.api.factory.HFactory;
-
-import com.turbulence.core.*;
-import com.turbulence.util.*;
 
 public class StoreDataAction implements Action {
     private Logger logger;

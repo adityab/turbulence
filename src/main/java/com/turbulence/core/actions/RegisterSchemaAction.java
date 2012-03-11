@@ -8,21 +8,17 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.Queue;
 import java.util.LinkedList;
 
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.*;
 import org.neo4j.graphdb.traversal.Evaluators;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
-import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.kernel.Traversal;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.reasoner.NodeSet;
 
 import com.clarkparsia.pellet.owlapiv3.*;
 

@@ -1,34 +1,13 @@
 package com.turbulence;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.UnknownHostException;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Enumeration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Executors;
-
-import javax.xml.parsers.*;
 
 import org.apache.log4j.BasicConfigurator;
 
 import org.neo4j.graphdb.*;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
-import org.neo4j.kernel.impl.util.FileUtils;
-import org.semanticweb.owlapi.io.*;
-import org.semanticweb.owlapi.model.*;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.apibinding.*;
-
-import org.semanticweb.owlapi.reasoner.NodeSet;
-import org.semanticweb.owlapi.reasoner.Node;
-import org.semanticweb.owlapi.util.SimpleIRIMapper;
-import org.semanticweb.owlapi.util.*;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory;
@@ -36,7 +15,6 @@ import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 
 import com.turbulence.core.TurbulenceDriver;
-import com.turbulence.util.OntologyMapper;
 import com.turbulence.util.Config;
 
 public class Turbulence {

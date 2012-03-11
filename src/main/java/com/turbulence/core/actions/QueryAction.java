@@ -1,13 +1,9 @@
 package com.turbulence.core.actions;
 
-import org.apache.xerces.impl.xpath.regex.RegularExpression;
-
 import java.util.*;
 
 import com.hp.hpl.jena.graph.*;
 
-import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.ResultSet;
