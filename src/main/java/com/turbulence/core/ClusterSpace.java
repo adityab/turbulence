@@ -20,21 +20,47 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
 public class ClusterSpace {
+    private static final String INTERNAL_TURBULENCE_IRI = "http://turbulencedb.com/internal/";
+    private static final String TURBULENCE_IRI = "http://turbulencedb.com/definitions/";
     private GraphDatabaseService db;
     private Logger logger;
 
     public static enum InternalRelTypes implements RelationshipType {
-        ROOT, // a ROOT goes from reference Node (outgoing) -> to Node
-        SOURCE_ONTOLOGY,
-        KNOWN_ONTOLOGY,
-        ONTOLOGIES_REFERENCE
+        ROOT                      ("Root"), // a ROOT goes from reference Node
+                                            // (outgoing) -> to Node
+        SOURCE_ONTOLOGY           ("sourceOntology"),
+        KNOWN_ONTOLOGY            ("knownOntology"),
+        ONTOLOGIES_REFERENCE      ("ontologiesReference");
+
+        private final String iriName;
+        InternalRelTypes(String iriName) {
+            this.iriName = iriName;
+        }
+
+        public String getIRI() {
+            return INTERNAL_TURBULENCE_IRI + iriName;
+        }
     }
 
     public static enum PublicRelTypes implements RelationshipType {
-        IS_A,
-        EQUIVALENT_CLASS,
-        OBJECT_RELATIONSHIP,
-        DATATYPE_RELATIONSHIP
+        IS_A                      ("subClassOf"),
+        EQUIVALENT_CLASS          ("equivalentClass"),
+        OBJECT_RELATIONSHIP       ("objectRelationship"),
+        DATATYPE_RELATIONSHIP     ("datatypeRelationship");
+
+        private final String iriName;
+        PublicRelTypes(String iriName) {
+            this.iriName = iriName;
+        }
+
+        public String getIRI() {
+            if (this == IS_A)
+                return "http://www.w3.org/2000/01/rdf-schema#" + iriName;
+            else if (this == EQUIVALENT_CLASS)
+                return "http://www.w3.org/2002/07/owl#" + iriName;
+
+            return TURBULENCE_IRI + iriName;
+        }
     }
 
     public ClusterSpace(String dbPath) {

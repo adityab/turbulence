@@ -11,6 +11,7 @@ import org.apache.commons.collections.iterators.*;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.StopEvaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
@@ -48,9 +49,25 @@ class ClusterSpaceJenaIterator extends NiceIterator<Triple> {
 
 	public Triple next() {
 	    org.neo4j.graphdb.Relationship rel = internal.next();
-        return Triple.create(Node.createURI((String)rel.getStartNode().getProperty("IRI", "eiskanull")),
-                             Node.createURI((String)rel.getProperty("IRI", rel.getType().name())), // TODO deal with IS_A
-                             Node.createURI((String)rel.getEndNode().getProperty("IRI", "eiskanull")));
+
+	    Node sub = Node.createURI((String)rel.getStartNode().getProperty("IRI", "bombaderror"));
+
+	    Node pred;
+	    if (rel.hasProperty("IRI")) {
+	        pred = Node.createURI((String) rel.getProperty("IRI"));
+        }
+        else {
+            RelationshipType type = rel.getType();
+            if (type instanceof ClusterSpace.PublicRelTypes)
+                pred = Node.createURI(((ClusterSpace.PublicRelTypes) type).getIRI());
+            else if (type instanceof ClusterSpace.InternalRelTypes)
+                pred = Node.createURI(((ClusterSpace.InternalRelTypes) type).getIRI());
+            else
+                throw new RuntimeException("Unknown relationship type");
+        }
+
+        Node obj = Node.createURI((String)rel.getEndNode().getProperty("IRI", "bombaderror"));
+        return Triple.create(sub, pred, obj);
 	}
 }
 
