@@ -17,6 +17,7 @@ import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.StopEvaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.Evaluators;
+import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.TraversalPosition;
 import org.neo4j.graphdb.Traverser;
 import org.neo4j.kernel.Traversal;
@@ -49,11 +50,9 @@ class ClusterSpaceJenaIterator extends NiceIterator<Triple> {
 
 	public Triple next() {
 	    org.neo4j.graphdb.Relationship rel = internal.next();
-	    logger.warn(rel.getStartNode().getProperty("IRI") + "--" + rel.getType().name() + "--" + rel.getEndNode().getProperty("IRI"));
-	    // TODO: should actually return proper SVO
-        return Triple.create(Node.createURI((String)rel.getStartNode().getProperty("IRI")),
+        return Triple.create(Node.createURI((String)rel.getStartNode().getProperty("IRI", "eiskanull")),
                              Node.createURI((String)rel.getProperty("IRI", rel.getType().name())), // TODO deal with IS_A
-                             Node.createURI((String)rel.getEndNode().getProperty("IRI")));
+                             Node.createURI((String)rel.getEndNode().getProperty("IRI", "eiskanull")));
 	}
 }
 
@@ -162,14 +161,34 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             throw new QueryExecException();
         }
 
+        TraversalDescription trav = Traversal.description()
+                                    .breadthFirst()
+                                    .evaluator(Evaluators.all())
+                                    .relationships(RegisterSchemaAction.InternalRelTypes.ROOT);
+
+        // this evaluator allows us to traverse from the reference node,
+        // and follow 'ROOT' relationships, but not include the relationships
+        // (and the reference node) themselves in the results
+        trav = trav.evaluator( Evaluators.lastRelationshipTypeIs(
+                    Evaluation.EXCLUDE_AND_CONTINUE,
+                    Evaluation.INCLUDE_AND_CONTINUE,
+                    RegisterSchemaAction.InternalRelTypes.ROOT));
+
         if (pred.isURI()
             && pred.getURI().equals("http://www.w3.org/2000/01/rdf-schema#subClassOf")) {
             return objects;
         }
-        else if (pred.isURI()
-                && pred.getURI().equals("http://turbulencedb.com/definitions/relationship")) {
+        else if ((pred.isURI() &&
+                      pred.getURI().equals("http://turbulencedb.com/definitions/relationship"))
+                 || pred == Node.ANY) {
+            logger.warn("THIS BRANCH");
+            for (RegisterSchemaAction.PublicRelTypes type : RegisterSchemaAction.PublicRelTypes.values())
+                trav = trav.relationships(type);
+        }
+        else if (pred.isURI()) { /* custom relationship */
         }
 
-        return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
+        logger.warn("SJDFLDJFLDSF");
+        return new ClusterSpaceJenaIterator(trav.traverse(cs.getReferenceNode()).relationships().iterator());
     }
 }
