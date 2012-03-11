@@ -30,25 +30,11 @@ import com.turbulence.core.*;
 import com.turbulence.util.*;
 
 public class RegisterSchemaAction implements Action {
-    public static enum InternalRelTypes implements RelationshipType {
-        ROOT, // a ROOT goes from reference Node (outgoing) -> to Node
-        SOURCE_ONTOLOGY,
-        KNOWN_ONTOLOGY,
-        ONTOLOGIES_REFERENCE
-    }
-
-    public static enum PublicRelTypes implements RelationshipType {
-        IS_A,
-        EQUIVALENT_CLASS,
-        OBJECT_RELATIONSHIP,
-        DATATYPE_RELATIONSHIP
-    }
-
     private Logger logger;
     private URI schemaURI;
     private OWLOntologyManager ontologyManager;
     private OntologyMapper ontologyMapper;
-    private EmbeddedGraphDatabase cs;
+    private ClusterSpace cs;
     private Index<Node> ontologyIndex;
     private static final String KNOWN_ONTOLOGY_KEY = "KNOWN_ONTOLOGY";
 
@@ -62,10 +48,8 @@ public class RegisterSchemaAction implements Action {
     }
 
     public Result perform() {
-        cs = TurbulenceDriver.getClusterSpaceDB();
+        cs = TurbulenceDriver.getClusterSpace();
         ontologyIndex = cs.index().forNodes("ontologyIndex");
-
-        registerShutdownHook(cs);
 
         logger.warning(this.getClass().getName()+ " perform "+ schemaURI);
         IRI iri = IRI.create(schemaURI);
@@ -107,7 +91,7 @@ public class RegisterSchemaAction implements Action {
                     return r;
                 }
 
-                getKnownOntologiesReferenceNode().createRelationshipTo(ontNode, InternalRelTypes.KNOWN_ONTOLOGY);
+                getKnownOntologiesReferenceNode().createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.KNOWN_ONTOLOGY);
                 tx.success();
             } finally {
                 tx.finish();
@@ -127,7 +111,7 @@ public class RegisterSchemaAction implements Action {
                 for (OWLClass c : ont.getClassesInSignature(false /*exclude imports closure*/)) {
                     Node cNode = link(c, reasoner);
                     if (cNode != null)
-                        cNode.createRelationshipTo(ontNode, InternalRelTypes.SOURCE_ONTOLOGY);
+                        cNode.createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY);
                 }
 
                 for (OWLAxiom c : ont.getAxioms(AxiomType.OBJECT_PROPERTY_DOMAIN)) {
@@ -186,12 +170,12 @@ public class RegisterSchemaAction implements Action {
     }
 
     private Collection<Node> subclasses(Node X) {
-        Traverser trav = X.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, ReturnableEvaluator.ALL_BUT_START_NODE, PublicRelTypes.IS_A, Direction.INCOMING);
+        Traverser trav = X.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, ReturnableEvaluator.ALL_BUT_START_NODE, ClusterSpace.PublicRelTypes.IS_A, Direction.INCOMING);
         return trav.getAllNodes();
     }
 
     private Collection<Node> superclasses(Node X) {
-        Traverser trav = X.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, ReturnableEvaluator.ALL_BUT_START_NODE, PublicRelTypes.IS_A, Direction.OUTGOING);
+        Traverser trav = X.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, ReturnableEvaluator.ALL_BUT_START_NODE, ClusterSpace.PublicRelTypes.IS_A, Direction.OUTGOING);
         return trav.getAllNodes();
     }
 
@@ -230,16 +214,16 @@ public class RegisterSchemaAction implements Action {
                         .breadthFirst()
                         .evaluator(Evaluators.atDepth(1))
                         .evaluator(Evaluators.returnWhereEndNodeIs(X))
-                        .relationships(PublicRelTypes.IS_A, Direction.OUTGOING)
+                        .relationships(ClusterSpace.PublicRelTypes.IS_A, Direction.OUTGOING)
                         .traverse(XC);
 
                     Relationship rel = linkTrav.relationships().iterator().next();
                     rel.delete();
-                    XC.createRelationshipTo(N, PublicRelTypes.IS_A);
+                    XC.createRelationshipTo(N, ClusterSpace.PublicRelTypes.IS_A);
                 }
             }
 
-            N.createRelationshipTo(X, PublicRelTypes.IS_A);
+            N.createRelationshipTo(X, ClusterSpace.PublicRelTypes.IS_A);
             // we are ready to return true as soon as we're done with checking
             // the siblings
 
@@ -265,7 +249,7 @@ public class RegisterSchemaAction implements Action {
         }
         else if (r.getSubClasses(Nclass, true /*direct*/).containsEntity(Xclass)) {
             System.out.println(Nclass + " is a superclass of " + Xclass);
-            X.createRelationshipTo(N, PublicRelTypes.IS_A);
+            X.createRelationshipTo(N, ClusterSpace.PublicRelTypes.IS_A);
 
             // deal with siblings
             Collection<Node> siblings;
@@ -281,7 +265,7 @@ public class RegisterSchemaAction implements Action {
             for (Node XS : siblings) {
                 OWLClass XSclass = man.getOWLDataFactory().getOWLClass(IRI.create((String)XS.getProperty("IRI")));
                 if (r.getSubClasses(Nclass, true /*direct*/).containsEntity(XSclass)) {
-                    XS.createRelationshipTo(N, PublicRelTypes.IS_A);
+                    XS.createRelationshipTo(N, ClusterSpace.PublicRelTypes.IS_A);
 
                     if (isRoot(XS)) {
                         removeRoot(XS);
@@ -304,39 +288,39 @@ public class RegisterSchemaAction implements Action {
 
     private Collection<Node> getRoots() {
         Node ref = cs.getReferenceNode();
-        Traverser trav = ref.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.END_OF_GRAPH, ReturnableEvaluator.ALL_BUT_START_NODE, InternalRelTypes.ROOT, Direction.OUTGOING);
+        Traverser trav = ref.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.END_OF_GRAPH, ReturnableEvaluator.ALL_BUT_START_NODE, ClusterSpace.InternalRelTypes.ROOT, Direction.OUTGOING);
         return trav.getAllNodes();
     }
 
     private void addRoot(Node n) {
-        if (n.hasRelationship(InternalRelTypes.ROOT, Direction.INCOMING))
+        if (n.hasRelationship(ClusterSpace.InternalRelTypes.ROOT, Direction.INCOMING))
             return;
         Node ref = cs.getReferenceNode();
-        ref.createRelationshipTo(n, InternalRelTypes.ROOT);
+        ref.createRelationshipTo(n, ClusterSpace.InternalRelTypes.ROOT);
     }
 
     private boolean isRoot(Node n) {
-        return n.hasRelationship(InternalRelTypes.ROOT, Direction.INCOMING);
+        return n.hasRelationship(ClusterSpace.InternalRelTypes.ROOT, Direction.INCOMING);
     }
 
     private void removeRoot(Node n) {
         assert isRoot(n);
-        Relationship rel = n.getSingleRelationship(InternalRelTypes.ROOT, Direction.INCOMING);
+        Relationship rel = n.getSingleRelationship(ClusterSpace.InternalRelTypes.ROOT, Direction.INCOMING);
         rel.delete();
     }
 
     private void addEquivalentClassLink(Node from, Node to) {
-        from.createRelationshipTo(to, PublicRelTypes.EQUIVALENT_CLASS);
+        from.createRelationshipTo(to, ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS);
     }
 
     private Node getKnownOntologiesReferenceNode() {
         Node ref = cs.getReferenceNode();
-        Relationship ko = ref.getSingleRelationship(InternalRelTypes.ONTOLOGIES_REFERENCE, Direction.OUTGOING);
+        Relationship ko = ref.getSingleRelationship(ClusterSpace.InternalRelTypes.ONTOLOGIES_REFERENCE, Direction.OUTGOING);
         if (ko == null) {
             Transaction tx = cs.beginTx();
             try {
                 Node ontRef = cs.createNode();
-                ref.createRelationshipTo(ontRef, InternalRelTypes.ONTOLOGIES_REFERENCE);
+                ref.createRelationshipTo(ontRef, ClusterSpace.InternalRelTypes.ONTOLOGIES_REFERENCE);
                 tx.success();
                 return ontRef;
             } finally {
@@ -358,7 +342,7 @@ public class RegisterSchemaAction implements Action {
             public boolean isReturnableNode(TraversalPosition pos) {
                 return pos.notStartNode() && pos.currentNode().getProperty("IRI").equals(clazzIRI.toString());
             }
-        }, InternalRelTypes.SOURCE_ONTOLOGY, Direction.INCOMING);
+        }, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY, Direction.INCOMING);
 
         Iterator<Node> iter = trav.iterator();
         return iter.hasNext() ? iter.next() : null;
@@ -396,7 +380,7 @@ public class RegisterSchemaAction implements Action {
         // no roots can be subclasses of something else
         logger.warning("Roots len " + getRoots().size());
         for (Node R : getRoots())
-            assert !R.hasRelationship(PublicRelTypes.IS_A, Direction.OUTGOING);
+            assert !R.hasRelationship(ClusterSpace.PublicRelTypes.IS_A, Direction.OUTGOING);
 
         return n;
     }
@@ -412,7 +396,7 @@ public class RegisterSchemaAction implements Action {
         Transaction tx = cs.beginTx();
         try {
             // TODO set column family location on domain
-            Relationship rel = domainNode.createRelationshipTo(rangeNode, PublicRelTypes.OBJECT_RELATIONSHIP);
+            Relationship rel = domainNode.createRelationshipTo(rangeNode, ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP);
             rel.setProperty("IRI", property.getIRI().toString());
             tx.success();
         } finally {
@@ -435,12 +419,4 @@ public class RegisterSchemaAction implements Action {
         }
     }
 
-    private static void registerShutdownHook(final GraphDatabaseService cs) {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                System.out.println("Shutting down cs");
-                cs.shutdown();
-            }
-        });
-    }
 }

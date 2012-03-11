@@ -1,6 +1,5 @@
 package com.turbulence.core;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -11,7 +10,6 @@ import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.iterators.*;
 
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.StopEvaluator;
@@ -30,7 +28,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.util.iterator.NiceIterator;
 import com.hp.hpl.jena.query.QueryExecException;
 
-import com.turbulence.core.actions.RegisterSchemaAction;
+import com.turbulence.core.ClusterSpace;
 
 class ClusterSpaceJenaIterator extends NiceIterator<Triple> {
     private static final Log logger =
@@ -60,14 +58,14 @@ public class ClusterSpaceJenaGraph extends GraphBase {
     private static final Log logger =
         LogFactory.getLog(ClusterSpaceJenaGraph.class);
 
-    private GraphDatabaseService cs;
+    private ClusterSpace cs;
 
     /**
      * Constructs a new instance.
      */
     public ClusterSpaceJenaGraph()
     {
-        cs = TurbulenceDriver.getClusterSpaceDB();
+        cs = TurbulenceDriver.getClusterSpace();
     }
 
     private org.neo4j.graphdb.Node getClass(final String classIRI) {
@@ -88,7 +86,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             public boolean isReturnableNode(TraversalPosition pos) {
                 return ((String)pos.currentNode().getProperty("IRI")).equals(classIRI.toString());
             }
-        }, RegisterSchemaAction.InternalRelTypes.SOURCE_ONTOLOGY, Direction.INCOMING);
+        }, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY, Direction.INCOMING);
 
         if (trav.iterator().hasNext())
             return trav.iterator().next();
@@ -101,14 +99,14 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         for (org.neo4j.graphdb.Node root : Traversal.description()
                 .breadthFirst()
                 .evaluator(Evaluators.atDepth(1))
-                .relationships(RegisterSchemaAction.InternalRelTypes.ROOT)
+                .relationships(ClusterSpace.InternalRelTypes.ROOT)
                 .traverse(cs.getReferenceNode())
                 .nodes()) {
             org.neo4j.graphdb.traversal.Traverser trav = Traversal.description()
                 .breadthFirst()
                 .evaluator(Evaluators.all())
-                .relationships(RegisterSchemaAction.PublicRelTypes.IS_A, Direction.INCOMING)
-                .relationships(RegisterSchemaAction.PublicRelTypes.EQUIVALENT_CLASS, Direction.BOTH)
+                .relationships(ClusterSpace.PublicRelTypes.IS_A, Direction.INCOMING)
+                .relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS, Direction.BOTH)
                 .traverse(root);
             rootIterators.add(trav.relationships().iterator());
         }
@@ -126,8 +124,8 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         TraversalDescription desc = Traversal.description()
                                     .depthFirst()
                                     .evaluator(Evaluators.all())
-                                    .relationships(RegisterSchemaAction.PublicRelTypes.IS_A, Direction.INCOMING)
-                                    .relationships(RegisterSchemaAction.PublicRelTypes.EQUIVALENT_CLASS, Direction.BOTH);
+                                    .relationships(ClusterSpace.PublicRelTypes.IS_A, Direction.INCOMING)
+                                    .relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS, Direction.BOTH);
 
         return new ClusterSpaceJenaIterator(desc.traverse(cNode).relationships().iterator());
     }
@@ -164,7 +162,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         TraversalDescription trav = Traversal.description()
                                     .breadthFirst()
                                     .evaluator(Evaluators.all())
-                                    .relationships(RegisterSchemaAction.InternalRelTypes.ROOT);
+                                    .relationships(ClusterSpace.InternalRelTypes.ROOT);
 
         // this evaluator allows us to traverse from the reference node,
         // and follow 'ROOT' relationships, but not include the relationships
@@ -172,7 +170,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         trav = trav.evaluator( Evaluators.lastRelationshipTypeIs(
                     Evaluation.EXCLUDE_AND_CONTINUE,
                     Evaluation.INCLUDE_AND_CONTINUE,
-                    RegisterSchemaAction.InternalRelTypes.ROOT));
+                    ClusterSpace.InternalRelTypes.ROOT));
 
         if (pred.isURI()
             && pred.getURI().equals("http://www.w3.org/2000/01/rdf-schema#subClassOf")) {
@@ -182,7 +180,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                       pred.getURI().equals("http://turbulencedb.com/definitions/relationship"))
                  || pred == Node.ANY) {
             logger.warn("THIS BRANCH");
-            for (RegisterSchemaAction.PublicRelTypes type : RegisterSchemaAction.PublicRelTypes.values())
+            for (ClusterSpace.PublicRelTypes type : ClusterSpace.PublicRelTypes.values())
                 trav = trav.relationships(type);
         }
         else if (pred.isURI()) { /* custom relationship */

@@ -46,7 +46,7 @@ public class TurbulenceDriver {
 
     private static String dataDir = null;
 
-    private static EmbeddedGraphDatabase clusterSpaceDB;
+    private static ClusterSpace clusterSpace;
 
     private OWLOntologyManager ontologyManager;
     private OntologyMapper ontologyMapper;
@@ -90,15 +90,11 @@ public class TurbulenceDriver {
     }*/
 
     public static ClusterSpace getClusterSpace() {
-        return new ClusterSpace((new File(dataDir, CLUSTERSPACE_FILE)).getAbsolutePath());
-    }
-
-    public static EmbeddedGraphDatabase getClusterSpaceDB() {
         synchronized (TurbulenceDriver.class) {
-            if (clusterSpaceDB == null)
-                clusterSpaceDB = new EmbeddedGraphDatabase(new File(dataDir, CLUSTERSPACE_FILE).getAbsolutePath());
+            if (clusterSpace == null)
+                clusterSpace = new ClusterSpace((new File(dataDir, CLUSTERSPACE_FILE)).getAbsolutePath());
         }
-        return clusterSpaceDB;
+        return clusterSpace;
     }
 
     public static <T> Future<T> submit(Callable<T> task) {

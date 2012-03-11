@@ -23,10 +23,18 @@ public class ClusterSpace {
     private GraphDatabaseService db;
     private Logger logger;
 
-    public enum RelTypes implements RelationshipType {
-        ROOT,
+    public static enum InternalRelTypes implements RelationshipType {
+        ROOT, // a ROOT goes from reference Node (outgoing) -> to Node
+        SOURCE_ONTOLOGY,
+        KNOWN_ONTOLOGY,
+        ONTOLOGIES_REFERENCE
+    }
+
+    public static enum PublicRelTypes implements RelationshipType {
         IS_A,
-        EQUIVALENT_CLASS
+        EQUIVALENT_CLASS,
+        OBJECT_RELATIONSHIP,
+        DATATYPE_RELATIONSHIP
     }
 
     public ClusterSpace(String dbPath) {
@@ -49,12 +57,12 @@ public class ClusterSpace {
     }
 
     private Collection<Node> subclasses(Node X) {
-        Traverser trav = X.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, ReturnableEvaluator.ALL_BUT_START_NODE, RelTypes.IS_A, Direction.INCOMING);
+        Traverser trav = X.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, ReturnableEvaluator.ALL_BUT_START_NODE, PublicRelTypes.IS_A, Direction.INCOMING);
         return trav.getAllNodes();
     }
 
     private Collection<Node> superclasses(Node X) {
-        Traverser trav = X.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, ReturnableEvaluator.ALL_BUT_START_NODE, RelTypes.IS_A, Direction.OUTGOING);
+        Traverser trav = X.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, ReturnableEvaluator.ALL_BUT_START_NODE, PublicRelTypes.IS_A, Direction.OUTGOING);
         return trav.getAllNodes();
     }
 
@@ -89,13 +97,13 @@ public class ClusterSpace {
                     return true;
                 }
                 else if (r.getSubClasses(Nclass, true /*direct*/).containsEntity(XCclass)) {
-                    Relationship rel = XC.getSingleRelationship(RelTypes.IS_A, Direction.OUTGOING);
+                    Relationship rel = XC.getSingleRelationship(PublicRelTypes.IS_A, Direction.OUTGOING);
                     rel.delete();
-                    XC.createRelationshipTo(N, RelTypes.IS_A);
+                    XC.createRelationshipTo(N, PublicRelTypes.IS_A);
                 }
             }
 
-            N.createRelationshipTo(X, RelTypes.IS_A);
+            N.createRelationshipTo(X, PublicRelTypes.IS_A);
             // we are ready to return true as soon as we're done with checking
             // the siblings
 
@@ -121,7 +129,7 @@ public class ClusterSpace {
         }
         else if (r.getSubClasses(Nclass, true /*direct*/).containsEntity(Xclass)) {
             System.out.println(Nclass + " is a superclass of " + Xclass);
-            X.createRelationshipTo(N, RelTypes.IS_A);
+            X.createRelationshipTo(N, PublicRelTypes.IS_A);
 
             // deal with siblings
             Collection<Node> siblings;
@@ -137,7 +145,7 @@ public class ClusterSpace {
             for (Node XS : siblings) {
                 OWLClass XSclass = man.getOWLDataFactory().getOWLClass(IRI.create((String)XS.getProperty("IRI")));
                 if (r.getSubClasses(Nclass, true /*direct*/).containsEntity(XSclass)) {
-                    XS.createRelationshipTo(N, RelTypes.IS_A);
+                    XS.createRelationshipTo(N, PublicRelTypes.IS_A);
 
                     if (isRoot(XS)) {
                         removeRoot(XS);
@@ -160,27 +168,27 @@ public class ClusterSpace {
 
     private Collection<Node> getRoots() {
         Node ref = db.getReferenceNode();
-        Traverser trav = ref.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.END_OF_GRAPH, ReturnableEvaluator.ALL_BUT_START_NODE, RelTypes.ROOT, Direction.OUTGOING);
+        Traverser trav = ref.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.END_OF_GRAPH, ReturnableEvaluator.ALL_BUT_START_NODE, InternalRelTypes.ROOT, Direction.OUTGOING);
         return trav.getAllNodes();
     }
 
     private void addRoot(Node n) {
         Node ref = db.getReferenceNode();
-        ref.createRelationshipTo(n, RelTypes.ROOT);
+        ref.createRelationshipTo(n, InternalRelTypes.ROOT);
     }
 
     private boolean isRoot(Node n) {
-        return n.hasRelationship(RelTypes.ROOT, Direction.BOTH);
+        return n.hasRelationship(InternalRelTypes.ROOT, Direction.BOTH);
     }
 
     private void removeRoot(Node n) {
         assert isRoot(n);
-        Relationship rel = n.getSingleRelationship(RelTypes.ROOT, Direction.BOTH);
+        Relationship rel = n.getSingleRelationship(InternalRelTypes.ROOT, Direction.BOTH);
         rel.delete();
     }
 
     private void addEquivalentClassLink(Node from, Node to) {
-        from.createRelationshipTo(to, RelTypes.EQUIVALENT_CLASS);
+        from.createRelationshipTo(to, PublicRelTypes.EQUIVALENT_CLASS);
     }
 
     public void link(OWLClass c, OWLReasoner r) {
@@ -221,7 +229,7 @@ public class ClusterSpace {
         // no roots can be subclasses of something else
         System.out.println("Roots len " + getRoots().size());
         for (Node R : getRoots())
-            assert !R.hasRelationship(RelTypes.IS_A, Direction.OUTGOING);
+            assert !R.hasRelationship(PublicRelTypes.IS_A, Direction.OUTGOING);
     }
 
     private static void registerShutdownHook(final GraphDatabaseService db) {
