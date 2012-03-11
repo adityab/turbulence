@@ -4,23 +4,23 @@ import java.util.logging.Logger;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Queue;
 import java.util.LinkedList;
 
 import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.event.KernelEventHandler;
+import org.neo4j.graphdb.event.TransactionEventHandler;
+import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
-import org.neo4j.kernel.impl.util.FileUtils;
 
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.reasoner.NodeSet;
 
 public class ClusterSpace {
-    private EmbeddedGraphDatabase db;
+    private GraphDatabaseService db;
     private Logger logger;
 
     public enum RelTypes implements RelationshipType {
@@ -232,4 +232,60 @@ public class ClusterSpace {
             }
         });
     }
+
+	public Node createNode() {
+		return db.createNode();
+	}
+
+	public Node getNodeById(long id) {
+		return db.getNodeById(id);
+	}
+
+	public Relationship getRelationshipById(long id) {
+		return db.getRelationshipById(id);
+	}
+
+	public Node getReferenceNode() {
+		return db.getReferenceNode();
+	}
+
+	public Iterable<Node> getAllNodes() {
+		return db.getAllNodes();
+	}
+
+	public Iterable<RelationshipType> getRelationshipTypes() {
+		return db.getRelationshipTypes();
+	}
+
+	public void shutdown() {
+		db.shutdown();
+	}
+
+	public Transaction beginTx() {
+		return db.beginTx();
+	}
+
+	public <T> TransactionEventHandler<T> registerTransactionEventHandler(
+			TransactionEventHandler<T> handler) {
+		return db.registerTransactionEventHandler(handler);
+	}
+
+	public <T> TransactionEventHandler<T> unregisterTransactionEventHandler(
+			TransactionEventHandler<T> handler) {
+		return db.unregisterTransactionEventHandler(handler);
+	}
+
+	public KernelEventHandler registerKernelEventHandler(
+			KernelEventHandler handler) {
+		return db.registerKernelEventHandler(handler);
+	}
+
+	public KernelEventHandler unregisterKernelEventHandler(
+			KernelEventHandler handler) {
+		return db.unregisterKernelEventHandler(handler);
+	}
+
+	public IndexManager index() {
+		return db.index();
+	}
 }
