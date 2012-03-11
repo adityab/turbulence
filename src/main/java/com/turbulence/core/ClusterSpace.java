@@ -217,6 +217,10 @@ public class ClusterSpace {
         from.createRelationshipTo(to, PublicRelTypes.EQUIVALENT_CLASS);
     }
 
+    public Collection<Node> getEquivalentClasses(Node clazz) {
+        return clazz.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, ReturnableEvaluator.ALL_BUT_START_NODE, PublicRelTypes.EQUIVALENT_CLASS, Direction.BOTH).getAllNodes();
+    }
+
     public void link(OWLClass c, OWLReasoner r) {
         // shouldn't create a new Node if a ndoe for c already exists
         // FIXME
