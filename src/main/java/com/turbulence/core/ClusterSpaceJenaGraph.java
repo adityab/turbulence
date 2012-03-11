@@ -189,6 +189,8 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                     return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
 
                 trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(objNode));
+                for (org.neo4j.graphdb.Node equiv : cs.getEquivalentClasses(objNode))
+                    trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(equiv));
             }
         }
         else if (obj.isURI()) {
@@ -206,6 +208,8 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                     return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
 
                 trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(subNode));
+                for (org.neo4j.graphdb.Node equiv : cs.getEquivalentClasses(subNode))
+                    trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(equiv));
             }
         }
         else {
