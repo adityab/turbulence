@@ -154,15 +154,21 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         Node sub  = triple.getSubject();
         Node pred = triple.getPredicate();
         Node obj  = triple.getObject();
+        logger.warn(sub + " " + pred + " " + obj);
 
         ClusterSpaceJenaIterator subjects;
         ClusterSpaceJenaIterator predicates;
         ClusterSpaceJenaIterator objects;
+
+        org.neo4j.graphdb.Node subjectStartNode;
+        org.neo4j.graphdb.Node objectStartNode;
         if (sub == Node.ANY) {
             subjects = allClasses();
+            subjectStartNode = cs.getReferenceNode();
         }
         else if (sub.isURI()) {
             subjects = classCover(sub.getURI());
+            subjectStartNode = getClass(sub.getURI());
         }
         else {
             throw new QueryExecException();
@@ -170,9 +176,11 @@ public class ClusterSpaceJenaGraph extends GraphBase {
 
         if (obj == Node.ANY) {
             objects = allClasses();
+            objectStartNode = cs.getReferenceNode();
         }
         else if (obj.isURI()) {
             objects = classCover(obj.getURI());
+            objectStartNode = getClass(sub.getURI());
         }
         else {
             throw new QueryExecException();
