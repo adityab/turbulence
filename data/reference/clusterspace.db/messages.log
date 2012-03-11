@@ -1,13 +1,13 @@
-2012-03-10 15:24:44.317+0530: Creating new db @ /Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db/neostore
-2012-03-10 15:24:44.420+0530: Opened [/Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db/nioneo_logical.log.1] clean empty log, version=0, lastTxId=1
-2012-03-10 15:24:44.441+0530: Opened [/Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db/index/lucene.log.1] clean empty log, version=0, lastTxId=1
-2012-03-10 15:24:44.443+0530: TM new log: tm_tx_log.1
-2012-03-10 15:24:44.456+0530: --- STARTUP diagnostics START ---
-2012-03-10 15:24:44.456+0530: Graph Database: org.neo4j.kernel.EmbeddedGraphDatabase StoreId[time:1331373284322, id:8331475836568041377, store version: 13561656364791302]
-2012-03-10 15:24:44.457+0530: Kernel version: Neo4j - Graph Database Kernel 1.6
-2012-03-10 15:24:44.457+0530: Neo4j component versions:
-2012-03-10 15:24:44.458+0530:   Neo4j - Graph Database Kernel 1.6
-2012-03-10 15:24:44.459+0530: Diagnostics providers:
+2012-03-11 12:03:07.413+0530: Creating new db @ /Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db/neostore
+2012-03-11 12:03:07.486+0530: Opened [/Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db/nioneo_logical.log.1] clean empty log, version=0, lastTxId=1
+2012-03-11 12:03:07.506+0530: Opened [/Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db/index/lucene.log.1] clean empty log, version=0, lastTxId=1
+2012-03-11 12:03:07.508+0530: TM new log: tm_tx_log.1
+2012-03-11 12:03:07.521+0530: --- STARTUP diagnostics START ---
+2012-03-11 12:03:07.521+0530: Graph Database: org.neo4j.kernel.EmbeddedGraphDatabase StoreId[time:1331447587417, id:1786865674401808026, store version: 13561656364791302]
+2012-03-11 12:03:07.522+0530: Kernel version: Neo4j - Graph Database Kernel 1.6
+2012-03-11 12:03:07.522+0530: Neo4j component versions:
+2012-03-11 12:03:07.523+0530:   Neo4j - Graph Database Kernel 1.6
+2012-03-11 12:03:07.524+0530: Diagnostics providers:
     KernelDiagnostics:Versions
     org.neo4j.kernel.info.DiagnosticsManager
     SYSTEM_MEMORY
@@ -21,36 +21,36 @@
     NEO_STORE_VERSIONS
     NEO_STORE_ID_USAGE
     KernelDiagnostics:StoreFiles
-2012-03-10 15:24:44.460+0530: System memory information:
+2012-03-11 12:03:07.526+0530: System memory information:
     Total Physical memory: 8.00 GB
-    Free Physical memory: 2.74 GB
-    Committed virtual memory: 2.83 GB
+    Free Physical memory: 1.59 GB
+    Committed virtual memory: 2.84 GB
     Total swap space: 256.00 MB
     Free swap space: 230.38 MB
-2012-03-10 15:24:44.466+0530: JVM memory information:
-    Free  memory: 65.84 MB
+2012-03-11 12:03:07.531+0530: JVM memory information:
+    Free  memory: 65.52 MB
     Total memory: 81.06 MB
     Max   memory: 123.94 MB
     Garbage Collector: ParNew: [Par Eden Space, Par Survivor Space]
     Garbage Collector: ConcurrentMarkSweep: [Par Eden Space, Par Survivor Space, CMS Old Gen, CMS Perm Gen]
-    Memory Pool: Code Cache (Non-heap memory): committed=2.44 MB, used=787.50 kB, max=48.00 MB, threshold=0.00 B
-    Memory Pool: Par Eden Space (Heap memory): committed=16.63 MB, used=12.34 MB, max=16.63 MB, threshold=?
-    Memory Pool: Par Survivor Space (Heap memory): committed=2.06 MB, used=1.83 MB, max=2.06 MB, threshold=?
-    Memory Pool: CMS Old Gen (Heap memory): committed=62.38 MB, used=1.06 MB, max=105.25 MB, threshold=0.00 B
-    Memory Pool: CMS Perm Gen (Non-heap memory): committed=20.75 MB, used=18.78 MB, max=82.00 MB, threshold=0.00 B
-2012-03-10 15:24:44.471+0530: Operating system information:
+    Memory Pool: Code Cache (Non-heap memory): committed=2.44 MB, used=787.44 kB, max=48.00 MB, threshold=0.00 B
+    Memory Pool: Par Eden Space (Heap memory): committed=16.63 MB, used=12.91 MB, max=16.63 MB, threshold=?
+    Memory Pool: Par Survivor Space (Heap memory): committed=2.06 MB, used=1.66 MB, max=2.06 MB, threshold=?
+    Memory Pool: CMS Old Gen (Heap memory): committed=62.38 MB, used=1.04 MB, max=105.25 MB, threshold=0.00 B
+    Memory Pool: CMS Perm Gen (Non-heap memory): committed=20.75 MB, used=18.84 MB, max=82.00 MB, threshold=0.00 B
+2012-03-11 12:03:07.536+0530: Operating system information:
     Operating System: Mac OS X; version: 10.6.8; arch: x86_64; cpus: 8
     Max number of file descriptors: 10240
     Number of open file descriptors: 145
-    Process id: 5344@macironik.local
+    Process id: 45892@macironik.local
     Byte order: LITTLE_ENDIAN
-2012-03-10 15:24:44.473+0530: JVM information:
+2012-03-11 12:03:07.538+0530: JVM information:
     VM Name: Java HotSpot(TM) 64-Bit Server VM
     VM Vendor: Apple Inc.
     VM Version: 19.1-b02-334
     JIT compiler: HotSpot 64-Bit Server Compiler
     VM Arguments: [-enableassertions, -Dfile.encoding=MacRoman]
-2012-03-10 15:24:44.474+0530: Java classpath:
+2012-03-11 12:03:07.539+0530: Java classpath:
      [classpath + loader.0] file:/Users/nikhilmarathe/.m2/repository/com/clarkparsia/pellet/pellet-el/2.3.0/pellet-el-2.3.0.jar
      [classpath + loader.0] file:/Users/nikhilmarathe/.m2/repository/org/apache/jena/jena-arq/2.9.0-incubating/jena-arq-2.9.0-incubating.jar
      [loader.1] file:/System/Library/Java/Extensions/dns_sd.jar
@@ -147,12 +147,12 @@
      [classpath + loader.0] file:/Users/nikhilmarathe/.m2/repository/org/json/json/20090211/json-20090211.jar
      [classpath + loader.0] file:/Users/nikhilmarathe/.m2/repository/owlapi/owlapi/3.2.4/owlapi-3.2.4.jar
      [classpath + loader.0] file:/Users/nikhilmarathe/.m2/repository/org/apache/httpcomponents/httpclient/4.1.2/httpclient-4.1.2.jar
-2012-03-10 15:24:44.481+0530: Library path:
+2012-03-11 12:03:07.546+0530: Library path:
     /Users/nikhilmarathe/workspace/turbulence
     /Library/Java/Extensions
     /System/Library/Java/Extensions
     /usr/lib/java
-2012-03-10 15:24:44.481+0530: System.properties:
+2012-03-11 12:03:07.546+0530: System.properties:
     sun.boot.library.path = /Library/Java/JavaVirtualMachines/1.6.0_24-b07-334.jdk/Contents/Libraries
     awt.nativeDoubleBuffering = true
     gopherProxySet = false
@@ -160,33 +160,27 @@
     path.separator = :
     file.encoding.pkg = sun.io
     sun.java.launcher = SUN_STANDARD
-    sun.os.patch.level = unknown
     user.country = US
+    sun.os.patch.level = unknown
     user.dir = /Users/nikhilmarathe/workspace/turbulence
-    socksProxyPort = 1080
-    https.proxyHost = localhost
     sun.jnu.encoding = MacRoman
-    http.proxyPort = 8123
     sun.management.compiler = HotSpot 64-Bit Server Compiler
     http.nonProxyHosts = local|*.local|169.254/16|*.169.254/16|10.100/16|*.10.100/16
     user.home = /Users/nikhilmarathe
     user.timezone = GMT+05:30
     file.encoding = MacRoman
     user.name = nikhilmarathe
-    socksProxyHost = localhost
     sun.arch.data.model = 64
     user.language = en
     awt.toolkit = apple.awt.CToolkit
-    http.proxyHost = localhost
     file.separator = /
     sun.io.unicode.encoding = UnicodeLittle
     sun.cpu.endian = little
     mrj.version = 1060.1.6.0_24-334
-    https.proxyPort = 8123
     socksNonProxyHosts = local|*.local|169.254/16|*.169.254/16|10.100/16|*.10.100/16
     ftp.nonProxyHosts = local|*.local|169.254/16|*.169.254/16|10.100/16|*.10.100/16
     sun.cpu.isalist = 
-2012-03-10 15:24:44.482+0530: Neo4j Kernel properties:
+2012-03-11 12:03:07.547+0530: Neo4j Kernel properties:
     store_dir=/Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db
     logical_log=/Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db/nioneo_logical.log
     node_auto_indexing=false
@@ -202,7 +196,7 @@
     create=true
     neostore.propertystore.db.mapped_memory=90M
     relationship_auto_indexing=false
-2012-03-10 15:24:44.483+0530: Store versions:
+2012-03-11 12:03:07.548+0530: Store versions:
     NeoStore v0.A.0
     NodeStore v0.A.0
     RelationshipStore v0.A.0
@@ -211,7 +205,7 @@
     PropertyIndexStore v0.A.0
     StringPropertyStore v0.A.0
     ArrayPropertyStore v0.A.0
-2012-03-10 15:24:44.483+0530: Id usage:
+2012-03-11 12:03:07.548+0530: Id usage:
     NodeStore: used=1 high=0
     RelationshipStore: used=0 high=-1
     RelationshipTypeStore: used=0 high=-1
@@ -219,7 +213,7 @@
     PropertyIndexStore: used=0 high=-1
     StringPropertyStore: used=1 high=0
     ArrayPropertyStore: used=1 high=0
-2012-03-10 15:24:44.484+0530: Storage files:
+2012-03-11 12:03:07.549+0530: Storage files:
     active_tx_log: 11.00 B
     index:
       lucene-store.db: 40.00 B
@@ -227,7 +221,7 @@
       lucene.log.active: 4.00 B
     - Total: 60.00 B
     lock: 0.00 B
-    messages.log: 16.42 kB
+    messages.log: 16.25 kB
     neostore: 54.00 B
     neostore.id: 9.00 B
     neostore.nodestore.db: 9.00 B
@@ -251,11 +245,11 @@
     nioneo_logical.log.1: 16.00 B
     nioneo_logical.log.active: 4.00 B
     tm_tx_log.1: 0.00 B
-2012-03-10 15:24:44.487+0530: --- STARTUP diagnostics END ---
-2012-03-10 15:24:44.488+0530: Extension org.neo4j.kernel.KernelExtension[kernel udc] loaded ok
-2012-03-10 15:24:44.523+0530: Extension org.neo4j.kernel.KernelExtension[kernel jmx] loaded ok
-2012-03-10 15:24:59.110+0530: Closed log /Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db/nioneo_logical.log
-2012-03-10 15:24:59.121+0530: NeoStore closed
-2012-03-10 15:24:59.127+0530: Closed log /Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db/index/lucene.log
-2012-03-10 15:24:59.127+0530: NeoStore closed
-2012-03-10 15:24:59.128+0530: TM shutting down
+2012-03-11 12:03:07.552+0530: --- STARTUP diagnostics END ---
+2012-03-11 12:03:07.553+0530: Extension org.neo4j.kernel.KernelExtension[kernel udc] loaded ok
+2012-03-11 12:03:07.588+0530: Extension org.neo4j.kernel.KernelExtension[kernel jmx] loaded ok
+2012-03-11 12:04:12.366+0530: Closed log /Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db/nioneo_logical.log
+2012-03-11 12:04:12.383+0530: NeoStore closed
+2012-03-11 12:04:12.390+0530: Closed log /Users/nikhilmarathe/workspace/turbulence/data/devel/clusterspace.db/index/lucene.log
+2012-03-11 12:04:12.390+0530: NeoStore closed
+2012-03-11 12:04:12.390+0530: TM shutting down
