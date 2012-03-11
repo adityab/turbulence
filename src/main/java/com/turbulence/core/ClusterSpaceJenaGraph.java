@@ -58,12 +58,15 @@ class ClusterSpaceJenaIterator extends NiceIterator<Triple> {
         }
         else {
             RelationshipType type = rel.getType();
-            if (type instanceof ClusterSpace.PublicRelTypes)
-                pred = Node.createURI(((ClusterSpace.PublicRelTypes) type).getIRI());
-            else if (type instanceof ClusterSpace.InternalRelTypes)
-                pred = Node.createURI(((ClusterSpace.InternalRelTypes) type).getIRI());
-            else
-                throw new RuntimeException("Unknown relationship type");
+            try {
+                pred = Node.createURI(ClusterSpace.PublicRelTypes.valueOf(type.name()).getIRI());
+            } catch (IllegalArgumentException e) {
+                try {
+                    pred = Node.createURI(ClusterSpace.InternalRelTypes.valueOf(type.name()).getIRI());
+                } catch (IllegalArgumentException ae) {
+                    throw new RuntimeException("Unknown relationship type " + type.name());
+                }
+            }
         }
 
         Node obj = Node.createURI((String)rel.getEndNode().getProperty("IRI", "bombaderror"));
@@ -86,7 +89,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
     }
 
     private org.neo4j.graphdb.Node getClass(final String classIRI) {
-        logger.warn(classIRI);
         // find the object in the cluster space
         // TODO: abstract this
         String ontologyIRI;
@@ -154,37 +156,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         Node sub  = triple.getSubject();
         Node pred = triple.getPredicate();
         Node obj  = triple.getObject();
-        logger.warn(sub + " " + pred + " " + obj);
-
-        ClusterSpaceJenaIterator subjects;
-        ClusterSpaceJenaIterator predicates;
-        ClusterSpaceJenaIterator objects;
-
-        org.neo4j.graphdb.Node subjectStartNode;
-        org.neo4j.graphdb.Node objectStartNode;
-        if (sub == Node.ANY) {
-            subjects = allClasses();
-            subjectStartNode = cs.getReferenceNode();
-        }
-        else if (sub.isURI()) {
-            subjects = classCover(sub.getURI());
-            subjectStartNode = getClass(sub.getURI());
-        }
-        else {
-            throw new QueryExecException();
-        }
-
-        if (obj == Node.ANY) {
-            objects = allClasses();
-            objectStartNode = cs.getReferenceNode();
-        }
-        else if (obj.isURI()) {
-            objects = classCover(obj.getURI());
-            objectStartNode = getClass(sub.getURI());
-        }
-        else {
-            throw new QueryExecException();
-        }
+        logger.warn("graphBaseFind: " + sub + " -- " + pred + " -- " + obj);
 
         TraversalDescription trav = Traversal.description()
                                     .breadthFirst()
@@ -199,21 +171,63 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                     Evaluation.INCLUDE_AND_CONTINUE,
                     ClusterSpace.InternalRelTypes.ROOT));
 
-        if (pred.isURI()
-            && pred.getURI().equals("http://www.w3.org/2000/01/rdf-schema#subClassOf")) {
-            return objects;
+        org.neo4j.graphdb.Node startNode = null;
+        Direction relationshipDirection;
+
+        if (sub.isURI()) {
+            startNode = getClass(sub.getURI());
+            if (startNode == null)
+                return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
+
+            relationshipDirection = Direction.OUTGOING;
+
+            trav = trav.evaluator(Evaluators.atDepth(1));
+
+            if (obj.isURI()) {
+                org.neo4j.graphdb.Node objNode = getClass(obj.getURI());
+                if (objNode == null)
+                    return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
+
+                trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(objNode));
+            }
         }
-        else if ((pred.isURI() &&
-                      pred.getURI().equals("http://turbulencedb.com/definitions/relationship"))
-                 || pred == Node.ANY) {
-            logger.warn("THIS BRANCH");
-            for (ClusterSpace.PublicRelTypes type : ClusterSpace.PublicRelTypes.values())
-                trav = trav.relationships(type);
+        else if (obj.isURI()) {
+            startNode = getClass(obj.getURI());
+            if (startNode == null)
+                return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
+
+            relationshipDirection = Direction.INCOMING;
+
+            trav = trav.evaluator(Evaluators.atDepth(1));
+
+            if (sub.isURI()) {
+                org.neo4j.graphdb.Node subNode = getClass(sub.getURI());
+                if (subNode == null)
+                    return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
+
+                trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(subNode));
+            }
         }
-        else if (pred.isURI()) { /* custom relationship */
+        else {
+            throw new QueryExecException("TODO: both undefined");
         }
 
-        logger.warn("SJDFLDJFLDSF");
-        return new ClusterSpaceJenaIterator(trav.traverse(cs.getReferenceNode()).relationships().iterator());
+        if (pred.isURI()
+            && pred.getURI().equals("http://www.w3.org/2000/01/rdf-schema#subClassOf")) {
+            trav = trav.relationships(ClusterSpace.PublicRelTypes.IS_A, relationshipDirection);
+            trav = trav.relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS); // equivalent class never has direction
+        }
+        else if (pred.isURI()) { /* custom relationship */
+            throw new QueryExecException("TODO: implement custom relationship evaluator");
+        }
+        else if (pred == Node.ANY) {
+            for (ClusterSpace.PublicRelTypes type : ClusterSpace.PublicRelTypes.values())
+                trav = trav.relationships(type, relationshipDirection);
+        }
+        else {
+            throw new QueryExecException("Unknown relationship type");
+        }
+
+        return new ClusterSpaceJenaIterator(trav.traverse(startNode).relationships().iterator());
     }
 }
