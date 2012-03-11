@@ -86,18 +86,20 @@ public class ClusterSpaceJenaGraph extends GraphBase {
     }
 
     private org.neo4j.graphdb.Node getClass(final String classIRI) {
+        logger.warn(classIRI);
         // find the object in the cluster space
         // TODO: abstract this
         String ontologyIRI;
         if (classIRI.lastIndexOf('#') != -1) {
-            ontologyIRI = classIRI.substring(0, classIRI.lastIndexOf('#')+1);
+            ontologyIRI = classIRI.substring(0, classIRI.lastIndexOf('#'));
         }
         else {
             ontologyIRI = classIRI.substring(0, classIRI.lastIndexOf('/')+1);
         }
         Index<org.neo4j.graphdb.Node> ontologyIndex = cs.index().forNodes("ontologyIndex");
         org.neo4j.graphdb.Node ont = ontologyIndex.get("KNOWN_ONTOLOGY", ontologyIRI).getSingle();
-        logger.warn("ONT: " + ontologyIRI + " " + ont);
+        if (ont == null)
+            return null;
         // get the class
         Traverser trav = ont.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, new ReturnableEvaluator() {
             public boolean isReturnableNode(TraversalPosition pos) {
