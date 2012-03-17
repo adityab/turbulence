@@ -1,11 +1,25 @@
 package com.turbulence.core.actions;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+
+import java.lang.String;
+
 import java.util.*;
+
+import javax.ws.rs.core.StreamingOutput;
+
+import javax.ws.rs.WebApplicationException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.hp.hpl.jena.graph.*;
 
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFormatter;
 
@@ -136,6 +150,8 @@ class Visitor extends ElementVisitorBase {
 }
 
 public class QueryAction implements Action {
+    private static final Log logger = LogFactory.getLog(QueryAction.class);
+
     private final String query;
     /**
      * Constructs a new instance.
@@ -145,24 +161,26 @@ public class QueryAction implements Action {
         this.query = query;
     }
 
-	public Result perform() {
+	public StreamingOutput stream() {
         Query q = QueryFactory.create(query);
 
         Model model = ModelFactory.createModelForGraph(new ClusterSpaceJenaGraph());
         QueryExecution exec = QueryExecutionFactory.create(q, model);
-        ResultSet result = exec.execSelect();
+        final ResultSet resultSet = exec.execSelect();
 
-        Result r = new Result();
-        r.success = true;
-        ResultSetFormatter.outputAsRDF("TURTLE", result);
-        /*System.err.println("project variables");
-        for (Var v : q.getProjectVars()) {
-            System.err.println(v.getName());
-        }
-
-        Element qpat = q.getQueryPattern();
-        qpat.visit(new Visitor());
-        return null;*/
-        return null;
+        return new StreamingOutput() {
+            public void write(OutputStream out) throws IOException, WebApplicationException {
+                while (resultSet.hasNext()) {
+                logger.warn("Called");
+                    QuerySolution row = resultSet.next();
+                    for (String s : resultSet.getResultVars())
+                        out.write(row.get(s).toString().getBytes());
+                };
+            }
+        };
 	}
+
+	public Result perform() {
+	    throw new UnsupportedOperationException();
+    }
 }

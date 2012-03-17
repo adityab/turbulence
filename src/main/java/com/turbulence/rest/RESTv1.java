@@ -7,6 +7,8 @@ import java.util.concurrent.Future;
 
 import javax.ws.rs.*;
 
+import javax.ws.rs.core.StreamingOutput;
+
 import org.w3c.dom.Document;
 
 import com.turbulence.core.actions.*;
@@ -59,9 +61,9 @@ public class RESTv1 {
     @POST
     @Path("/query")
     @Produces("application/xml")
-    public Result query(String body) {
+    public StreamingOutput query(String body) {
         System.err.println("QUERY:" + body);
         final QueryAction act = ActionFactory.createQueryAction(body);
-        return execute(act);
+        return act.stream();
     }
 }
