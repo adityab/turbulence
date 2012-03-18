@@ -3,7 +3,6 @@ package com.turbulence.core.actions;
 import java.io.InputStream;
 
 import java.net.URI;
-import org.w3c.dom.Document;
 
 public class ActionFactory {
     public static RegisterSchemaAction createRegisterSchemaAction(URI schemaURI) {

@@ -1,7 +1,6 @@
 package com.turbulence.rest;
 
 import java.io.InputStream;
-import java.io.IOException;
 
 import java.net.URI;
 import java.util.concurrent.Callable;
@@ -11,14 +10,6 @@ import java.util.concurrent.Future;
 import javax.ws.rs.*;
 
 import javax.ws.rs.core.StreamingOutput;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.Document;
-
-import org.xml.sax.SAXException;
 
 import com.turbulence.core.actions.*;
 import com.turbulence.core.TurbulenceDriver;
