@@ -1,5 +1,8 @@
 package com.turbulence.rest;
 
+import java.io.InputStream;
+import java.io.IOException;
+
 import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -9,7 +12,13 @@ import javax.ws.rs.*;
 
 import javax.ws.rs.core.StreamingOutput;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.w3c.dom.Document;
+
+import org.xml.sax.SAXException;
 
 import com.turbulence.core.actions.*;
 import com.turbulence.core.TurbulenceDriver;
@@ -53,8 +62,8 @@ public class RESTv1 {
     @Path("/store_data")
     @Consumes("application/xml")
     @Produces("application/xml")
-    public Result storeData(Document doc) {
-        final StoreDataAction act = ActionFactory.createStoreDataAction(doc);
+    public Result storeData(final InputStream in) {
+        final StoreDataAction act = ActionFactory.createStoreDataAction(in);
         return execute(act);
     }
 

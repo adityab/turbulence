@@ -1,5 +1,7 @@
 package com.turbulence.core.actions;
 
+import java.io.InputStream;
+
 import java.net.URI;
 import org.w3c.dom.Document;
 
@@ -8,8 +10,8 @@ public class ActionFactory {
         return new RegisterSchemaAction(schemaURI);
     }
 
-    public static StoreDataAction createStoreDataAction(Document data) {
-        return new StoreDataAction(data);
+    public static StoreDataAction createStoreDataAction(InputStream in) {
+        return new StoreDataAction(in);
     }
 
     public static QueryAction createQueryAction(String query) {
