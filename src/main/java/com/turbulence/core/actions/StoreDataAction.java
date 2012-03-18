@@ -18,9 +18,6 @@ import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.lang.UnhandledException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import me.prettyprint.cassandra.model.*;
 import me.prettyprint.cassandra.serializers.*;
 import me.prettyprint.cassandra.service.*;
@@ -31,8 +28,6 @@ import me.prettyprint.hector.api.exceptions.*;
 import me.prettyprint.hector.api.factory.HFactory;
 
 public class StoreDataAction implements Action {
-    private static final Log logger = LogFactory.getLog(StoreDataAction.class);
-
     private StringBuilder xpathExpr;
     private InputStream input;
     private XMLEventReader reader;

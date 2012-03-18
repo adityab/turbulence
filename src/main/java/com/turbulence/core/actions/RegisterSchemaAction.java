@@ -93,14 +93,6 @@ public class RegisterSchemaAction implements Action {
                 tx.finish();
             }
 
-            if (ontNode == null) {
-                Result r = new Result();
-                r.success = false;
-                r.error = TurbulenceError.SCHEMA_REGISTRATION_FAILED;
-                r.message = "At Ontology Node creation";
-                return r;
-            }
-
             OWLReasoner reasoner = PelletReasonerFactory.getInstance().createReasoner(ont);
             tx = cs.beginTx();
             try {

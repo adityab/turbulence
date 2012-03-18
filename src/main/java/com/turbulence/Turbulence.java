@@ -7,8 +7,6 @@ import java.util.concurrent.SynchronousQueue;
 
 import org.apache.log4j.BasicConfigurator;
 
-import org.neo4j.graphdb.*;
-
 import org.glassfish.grizzly.http.server.HttpServer;
 import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory;
 import com.sun.jersey.api.core.PackagesResourceConfig;
@@ -20,11 +18,6 @@ import com.turbulence.util.Config;
 public class Turbulence {
     private HttpServer httpServer;
     private BlockingQueue<String> exitQueue;
-
-    private static enum Rels implements RelationshipType {
-        IS_A,
-        ASSOCIATION
-    }
 
     private Turbulence(Config config) {
         exitQueue = new SynchronousQueue<String>();

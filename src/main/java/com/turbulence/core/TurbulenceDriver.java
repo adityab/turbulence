@@ -35,9 +35,9 @@ public class TurbulenceDriver {
 
     public static void initialize(Config config) {
         logger = Logger.getLogger("com.turbulence.core.TurbulenceDriver");
-        config = config;
+        TurbulenceDriver.config = config;
 
-        JSONObject core = config.getSection("core");
+        JSONObject core = TurbulenceDriver.config.getSection("core");
         if (core == null)
             throw new ConfigParseException("Missing section 'core'");
 

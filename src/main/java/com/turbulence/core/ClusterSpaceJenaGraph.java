@@ -11,6 +11,7 @@ import org.apache.commons.collections.iterators.*;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.StopEvaluator;
@@ -116,7 +117,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
     }
 
     private ClusterSpaceJenaIterator allClasses() {
-        List<Iterator> rootIterators = new ArrayList<Iterator>();
+        List<Iterator<Relationship>> rootIterators = new ArrayList<Iterator<Relationship>>();
         for (org.neo4j.graphdb.Node root : Traversal.description()
                 .breadthFirst()
                 .evaluator(Evaluators.atDepth(1))
@@ -137,7 +138,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
 
     // class and all subclasses
     private ClusterSpaceJenaIterator classCover(final String classIRI) {
-        List<Iterator> subclassIterators = new ArrayList<Iterator>();
+        List<Iterator<Relationship>> subclassIterators = new ArrayList<Iterator<Relationship>>();
         org.neo4j.graphdb.Node cNode = getClass(classIRI);
         if (cNode == null)
             return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
