@@ -19,6 +19,7 @@ public class ClusterSpace {
     public static enum InternalRelTypes implements RelationshipType {
         ROOT                      ("Root"), // a ROOT goes from reference Node
                                             // (outgoing) -> to Node
+        ROOT_OBJECT_PROPERTY      ("RootObjectProperty"),
         SOURCE_ONTOLOGY           ("sourceOntology"),
         KNOWN_ONTOLOGY            ("knownOntology"),
         ONTOLOGIES_REFERENCE      ("ontologiesReference");
@@ -37,7 +38,8 @@ public class ClusterSpace {
         IS_A                      ("subClassOf"),
         EQUIVALENT_CLASS          ("equivalentClass"),
         OBJECT_RELATIONSHIP       ("objectRelationship"),
-        DATATYPE_RELATIONSHIP     ("datatypeRelationship");
+        DATATYPE_RELATIONSHIP     ("datatypeRelationship"),
+        EQUIVALENT_OBJECT_PROPERTY("equivalentObjectProperty");
 
         private final String iriName;
         PublicRelTypes(String iriName) {

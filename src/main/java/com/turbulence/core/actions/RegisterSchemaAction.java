@@ -1,6 +1,8 @@
 package com.turbulence.core.actions;
 
-import java.util.logging.Logger;
+import java.lang.ClassNotFoundException;
+import java.lang.IllegalAccessException;
+import java.lang.InstantiationException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -11,14 +13,27 @@ import java.util.Iterator;
 import java.util.Queue;
 import java.util.LinkedList;
 
+import org.apache.commons.lang.UnhandledException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.apache.xerces.xs.XSImplementation;
+import org.apache.xerces.xs.XSLoader;
+import org.apache.xerces.xs.XSModel;
+
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.*;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.kernel.Traversal;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
+
+import org.semanticweb.owlapi.io.UnparsableOntologyException;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
+
+import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 
 import com.clarkparsia.pellet.owlapiv3.*;
 
@@ -26,7 +41,9 @@ import com.turbulence.core.*;
 import com.turbulence.util.*;
 
 public class RegisterSchemaAction implements Action {
-    private Logger logger;
+    private static final Log logger =
+        LogFactory.getLog(RegisterSchemaAction.class);
+
     private URI schemaURI;
     private OWLOntologyManager ontologyManager;
     private OntologyMapper ontologyMapper;
@@ -36,7 +53,6 @@ public class RegisterSchemaAction implements Action {
 
     protected RegisterSchemaAction(URI uri)
     {
-        logger = Logger.getLogger(this.getClass().getName());
         schemaURI = uri;
         ontologyManager = OWLManager.createOWLOntologyManager();
         ontologyMapper = new OntologyMapper(TurbulenceDriver.getOntologyStoreDirectory());
@@ -47,103 +63,133 @@ public class RegisterSchemaAction implements Action {
         cs = TurbulenceDriver.getClusterSpace();
         ontologyIndex = cs.index().forNodes("ontologyIndex");
 
-        logger.warning(this.getClass().getName()+ " perform "+ schemaURI);
+        logger.warn(this.getClass().getName()+ " perform "+ schemaURI);
         IRI iri = IRI.create(schemaURI);
         // TODO keep an index of known registered ontologies to avoid
         // duplication
         // ship buggy similarity ontology
         try {
-            OWLOntology ont = ontologyManager.loadOntology(iri);
-            if (ontologyMapper.getDocumentIRI(iri) == null)
-                TurbulenceDriver.submit(new OntologySaver(iri, ont, TurbulenceDriver.getOntologyStoreDirectory()));
-
-            for (OWLImportsDeclaration decl : ont.getImportsDeclarations()) {
-                logger.info("Registering imported ontology " + decl.getIRI());
-                try {
-                    RegisterSchemaAction act = ActionFactory.createRegisterSchemaAction(new URI(decl.getIRI().toString()));
-                    act.perform();
-                } catch (URISyntaxException e) {} // seriously?
-            }
-            logger.warning("loaded " + ont);
-
-            Node ontNode;
-            Transaction tx = cs.beginTx();
+            return handleOWLOntology(iri);
+        } catch (UnparsableOntologyException e) {
+            // probably XML schema, so let's try that
             try {
-                // create a Node for the ontology itself
-                ontNode = cs.createNode();
-                ontNode.setProperty("IRI", iri.toString());
-                // put if absent will return the OLD node if one existed, so
-                // that we don't have duplicates
-                Node previous = ontologyIndex.putIfAbsent(ontNode, KNOWN_ONTOLOGY_KEY, iri.toString());
-
-                if (previous != null) {
-                    // abort this entire RegisterSchema operation, because
-                    // somebody else already inserted this schema before, or
-                    // is doing/will do so in parallel right now.
-                    tx.finish();
-                    Result r = new Result();
-                    r.success = false;
-                    r.error = TurbulenceError.SCHEMA_IS_ALREADY_REGISTERED;
-                    return r;
-                }
-
-                getKnownOntologiesReferenceNode().createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.KNOWN_ONTOLOGY);
-                tx.success();
-            } finally {
-                tx.finish();
+                return handleXMLSchema(iri);
+            } catch (Exception ee) {
+                throw new UnhandledException(ee);
             }
-
-            OWLReasoner reasoner = PelletReasonerFactory.getInstance().createReasoner(ont);
-            tx = cs.beginTx();
-            try {
-                for (OWLClass c : ont.getClassesInSignature(false /*exclude imports closure*/)) {
-                    Node cNode = link(c, reasoner);
-                    if (cNode != null)
-                        cNode.createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY);
-                }
-
-                for (OWLAxiom c : ont.getAxioms(AxiomType.OBJECT_PROPERTY_DOMAIN)) {
-                    OWLObjectPropertyDomainAxiom ax = (OWLObjectPropertyDomainAxiom) c;
-                    if (ax.getProperty().isAnonymous())
-                        continue;
-                    if (ax.getDomain().isAnonymous())
-                        continue;
-                    for (OWLClassExpression range : ax.getProperty().getRanges(ont)) {
-                        if (range.isAnonymous())
-                            continue;
-                        createObjectPropertyRelationship(iri, ax.getProperty().asOWLObjectProperty(), ax.getDomain().asOWLClass(), range.asOWLClass());
-                    }
-                }
-
-                for (OWLAxiom c : ont.getAxioms(AxiomType.DATA_PROPERTY_DOMAIN)) {
-                    OWLDataPropertyDomainAxiom ax = (OWLDataPropertyDomainAxiom) c;
-                    if (ax.getProperty().isAnonymous())
-                        continue;
-                    if (ax.getDomain().isAnonymous())
-                        continue;
-                    for (OWLDataRange range : ax.getProperty().getRanges(ont)) {
-                        createDataProperty(iri, ax.getProperty().asOWLDataProperty(), ax.getDomain().asOWLClass(), range);
-                    }
-                }
-                tx.success();
-            } finally {
-                tx.finish();
-                // TODO handle error
-            }
-
-            Result r = new Result();
-            r.success = true;
-            r.message = "yeayayay";
-            return r;
         } catch (OWLOntologyCreationException e) {
             // TODO handle this doo doo
-            logger.warning("OOCE");
+            logger.warn("OOCE");
             Result r = new Result();
             r.success = false;
             r.error = TurbulenceError.ONTOLOGY_CREATION_FAILED;
             r.message = e.getMessage();
             return r;
         }
+    }
+
+    private Result handleOWLOntology(final IRI iri) throws OWLOntologyCreationException {
+        OWLOntology ont = ontologyManager.loadOntology(iri);
+        if (ontologyMapper.getDocumentIRI(iri) == null)
+            TurbulenceDriver.submit(new OntologySaver(iri, ont, TurbulenceDriver.getOntologyStoreDirectory()));
+
+        for (OWLImportsDeclaration decl : ont.getImportsDeclarations()) {
+            logger.info("Registering imported ontology " + decl.getIRI());
+            try {
+                RegisterSchemaAction act = ActionFactory.createRegisterSchemaAction(new URI(decl.getIRI().toString()));
+                act.perform();
+            } catch (URISyntaxException e) {} // seriously?
+        }
+        logger.warn("loaded " + ont);
+
+        Node ontNode;
+        Transaction tx = cs.beginTx();
+        try {
+            // create a Node for the ontology itself
+            ontNode = cs.createNode();
+            ontNode.setProperty("IRI", iri.toString());
+            // put if absent will return the OLD node if one existed, so
+            // that we don't have duplicates
+            Node previous = ontologyIndex.putIfAbsent(ontNode, KNOWN_ONTOLOGY_KEY, iri.toString());
+
+            if (previous != null) {
+                // abort this entire RegisterSchema operation, because
+                // somebody else already inserted this schema before, or
+                // is doing/will do so in parallel right now.
+                tx.finish();
+                Result r = new Result();
+                r.success = false;
+                r.error = TurbulenceError.SCHEMA_IS_ALREADY_REGISTERED;
+                return r;
+            }
+
+            getKnownOntologiesReferenceNode().createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.KNOWN_ONTOLOGY);
+            tx.success();
+        } finally {
+            tx.finish();
+        }
+
+        OWLReasoner reasoner = PelletReasonerFactory.getInstance().createReasoner(ont);
+        tx = cs.beginTx();
+        try {
+            for (OWLClass c : ont.getClassesInSignature(false /*exclude imports closure*/)) {
+                Node cNode = linkClass(c, reasoner);
+                if (cNode != null)
+                    cNode.createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY);
+            }
+
+            for (OWLAxiom c : ont.getAxioms(AxiomType.OBJECT_PROPERTY_DOMAIN)) {
+                OWLObjectPropertyDomainAxiom ax = (OWLObjectPropertyDomainAxiom) c;
+                // TODO: if domain or range is a union, then run for each class
+                if (ax.getProperty().isAnonymous())
+                    continue;
+                if (ax.getDomain().isAnonymous())
+                    continue;
+                Node rNode = linkObjectProperty(ax.getProperty().asOWLObjectProperty(), reasoner);
+                for (OWLClassExpression range : ax.getProperty().getRanges(ont)) {
+                    if (range.isAnonymous())
+                        continue;
+                    createObjectPropertyRelationship(iri, ax.getProperty().asOWLObjectProperty(), ax.getDomain().asOWLClass(), range.asOWLClass());
+                }
+            }
+
+            for (OWLAxiom c : ont.getAxioms(AxiomType.DATA_PROPERTY_DOMAIN)) {
+                OWLDataPropertyDomainAxiom ax = (OWLDataPropertyDomainAxiom) c;
+                if (ax.getProperty().isAnonymous())
+                    continue;
+                if (ax.getDomain().isAnonymous())
+                    continue;
+                for (OWLDataRange range : ax.getProperty().getRanges(ont)) {
+                    createDataProperty(iri, ax.getProperty().asOWLDataProperty(), ax.getDomain().asOWLClass(), range);
+                }
+            }
+            tx.success();
+        } finally {
+            tx.finish();
+            // TODO handle error
+        }
+
+        Result r = new Result();
+        r.success = true;
+        r.message = "yeayayay";
+        return r;
+    }
+
+    private Result handleXMLSchema(final IRI iri) {
+        XSModel schema;
+        try {
+            System.setProperty(DOMImplementationRegistry.PROPERTY,
+                    "org.apache.xerces.dom.DOMXSImplementationSourceImpl");
+            DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
+            XSImplementation impl = (XSImplementation) registry.getDOMImplementation("XS-Loader");
+            XSLoader schemaLoader = impl.createXSLoader(null);
+            schema = schemaLoader.loadURI(iri.toURI().toString());
+        } catch (ClassNotFoundException e) {
+        } catch (IllegalAccessException e) {
+        } catch (InstantiationException e) {
+        }
+
+        return null;
     }
 
     private Collection<Node> getSiblings(Node N) {
@@ -172,25 +218,25 @@ public class RegisterSchemaAction implements Action {
      * using the Reasoner and modifies the cluster space
      */
     private boolean compareClasses(Node N, Node X, OWLReasoner r) {
-        System.out.println("CCCCCalled");
         OWLOntology ont = r.getRootOntology();
         OWLOntologyManager man = ont.getOWLOntologyManager();
 
         OWLClass Nclass = man.getOWLDataFactory().getOWLClass(IRI.create((String)N.getProperty("IRI")));
         OWLClass Xclass = man.getOWLDataFactory().getOWLClass(IRI.create((String)X.getProperty("IRI")));
-        System.out.println("Comparing " + Nclass + " and " + Xclass);
+        logger.warn("Comparing " + Nclass + " and " + Xclass);
 
+        logger.warn("Equiv " + r.getEquivalentClasses(Nclass).getEntities().size());
         // since we've to anyway directly proceed by checking for membership of
         // X in subclass/superclasses of N, we should seriously optimize this
         // to directly proceed from the superclass/subclass chain on N and
         // their positions in the cluster space
         if (r.getEquivalentClasses(Nclass).contains(Xclass)) {
-            System.out.println("Equivalent!");
+            logger.warn("Equivalent!");
             addEquivalentClassLink(X, N);
             return true;
         }
         else if (r.getSuperClasses(Nclass, true /*direct*/).containsEntity(Xclass)) {
-            System.out.println(Nclass + " is a subclass of " + Xclass);
+            logger.warn(Nclass + " is a subclass of " + Xclass);
             for (Node XC : subclasses(X)) {
                 OWLClass XCclass = man.getOWLDataFactory().getOWLClass(IRI.create((String)XC.getProperty("IRI")));
                 if (r.getEquivalentClasses(Nclass).contains(XCclass)) {
@@ -236,13 +282,13 @@ public class RegisterSchemaAction implements Action {
             return true;
         }
         else if (r.getSubClasses(Nclass, true /*direct*/).containsEntity(Xclass)) {
-            System.out.println(Nclass + " is a superclass of " + Xclass);
+            logger.warn(Nclass + " is a superclass of " + Xclass);
             X.createRelationshipTo(N, ClusterSpace.PublicRelTypes.IS_A);
 
             // deal with siblings
             Collection<Node> siblings;
             if (isRoot(X)) {
-                System.out.println(Xclass + " is a ROOT");
+                logger.warn(Xclass + " is a ROOT");
                 siblings = getRoots();
                 siblings.remove(X);
             }
@@ -268,6 +314,101 @@ public class RegisterSchemaAction implements Action {
                 addRoot(N);
             }
             assert !isRoot(X);
+            return true;
+        }
+        else {
+            logger.warn("NONE FOUND");
+        }
+
+        return false;
+    }
+
+    private boolean compareObjectProperties(Node N, Node X, OWLReasoner reasoner) {
+        OWLOntology ont = reasoner.getRootOntology();
+        OWLOntologyManager man = ont.getOWLOntologyManager();
+        OWLObjectProperty Nprop = man.getOWLDataFactory().getOWLObjectProperty(IRI.create((String)N.getProperty("IRI")));
+        OWLObjectProperty Xprop = man.getOWLDataFactory().getOWLObjectProperty(IRI.create((String)X.getProperty("IRI")));
+
+        // TODO: optimize! see compareClasses comment
+        if (reasoner.getEquivalentObjectProperties(Nprop).contains(Xprop)) {
+            addEquivalentObjectPropertyLink(X, N);
+            return true;
+        }
+        else if (reasoner.getSuperObjectProperties(Nprop, true /*direct*/).containsEntity(Xprop)) {
+            logger.warn(Nprop + " is a subproperty of " + Xprop);
+            for (Node XP : subclasses(X)) {
+                OWLObjectProperty XPprop = man.getOWLDataFactory().getOWLObjectProperty(IRI.create((String)XP.getProperty("IRI")));
+                if (reasoner.getEquivalentObjectProperties(Nprop).contains(XPprop)) {
+                    addEquivalentObjectPropertyLink(XP, N);
+                    return true;
+                }
+                else if (reasoner.getSubObjectProperties(Nprop, true /*direct*/).containsEntity(XPprop)) {
+                    org.neo4j.graphdb.traversal.Traverser linkTrav = Traversal.description()
+                        .breadthFirst()
+                        .evaluator(Evaluators.atDepth(1))
+                        .evaluator(Evaluators.returnWhereEndNodeIs(X))
+                        .relationships(ClusterSpace.PublicRelTypes.IS_A, Direction.OUTGOING)
+                        .traverse(XP);
+
+                    Relationship rel = linkTrav.relationships().iterator().next();
+                    rel.delete();
+                    XP.createRelationshipTo(N, ClusterSpace.PublicRelTypes.IS_A);
+                }
+            }
+
+            N.createRelationshipTo(X, ClusterSpace.PublicRelTypes.IS_A);
+
+            Collection<Node> siblings;
+            if (isRootObjectProperty(X)) {
+                siblings = getRootObjectProperties();
+                siblings.remove(X);
+            }
+            else {
+                siblings = getSiblings(X);
+            }
+
+            for (Node XS : siblings) {
+                OWLObjectProperty XSprop = man.getOWLDataFactory().getOWLObjectProperty(IRI.create((String)XS.getProperty("IRI")));
+                if (reasoner.getSuperObjectProperties(Nprop, true /*direct*/).containsEntity(XSprop)) {
+                    compareObjectProperties(N, XS, reasoner);
+                }
+            }
+
+            assert !isRootObjectProperty(N);
+            return true;
+        }
+        else if (reasoner.getSubObjectProperties(Nprop, true /*direct*/).containsEntity(Xprop)) {
+            logger.warn(Nprop + " is a superclass of " + Xprop);
+            X.createRelationshipTo(N, ClusterSpace.PublicRelTypes.IS_A);
+
+            Collection<Node> siblings;
+            if (isRootObjectProperty(X)) {
+                logger.warn(Xprop + " is a ROOT object property");
+                siblings = getRootObjectProperties();
+                siblings.remove(X);
+            }
+            else {
+                siblings = getSiblings(X);
+            }
+
+            for (Node XS : siblings) {
+                OWLObjectProperty XSprop = man.getOWLDataFactory().getOWLObjectProperty(IRI.create((String)XS.getProperty("IRI")));
+                if (reasoner.getSubObjectProperties(Nprop, true /*direct*/).containsEntity(XSprop)) {
+                    XS.createRelationshipTo(N, ClusterSpace.PublicRelTypes.IS_A);
+
+                    if (isRootObjectProperty(XS)) {
+                        removeRootObjectProperty(XS);
+                        addRootObjectProperty(N);
+                    }
+                    assert !isRootObjectProperty(XS);
+                }
+            }
+
+            if (isRootObjectProperty(X)) {
+                removeRootObjectProperty(X);
+                addRootObjectProperty(N);
+            }
+            assert !isRootObjectProperty(X);
             return true;
         }
 
@@ -297,8 +438,35 @@ public class RegisterSchemaAction implements Action {
         rel.delete();
     }
 
+    private Collection<Node> getRootObjectProperties() {
+        Node ref = cs.getReferenceNode();
+        Traverser trav = ref.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.END_OF_GRAPH, ReturnableEvaluator.ALL_BUT_START_NODE, ClusterSpace.InternalRelTypes.ROOT_OBJECT_PROPERTY, Direction.OUTGOING);
+        return trav.getAllNodes();
+    }
+
+    private void addRootObjectProperty(Node n) {
+        if (n.hasRelationship(ClusterSpace.InternalRelTypes.ROOT_OBJECT_PROPERTY, Direction.INCOMING))
+            return;
+        Node ref = cs.getReferenceNode();
+        ref.createRelationshipTo(n, ClusterSpace.InternalRelTypes.ROOT_OBJECT_PROPERTY);
+    }
+
+    private boolean isRootObjectProperty(Node n) {
+        return n.hasRelationship(ClusterSpace.InternalRelTypes.ROOT_OBJECT_PROPERTY, Direction.INCOMING);
+    }
+
+    private void removeRootObjectProperty(Node n) {
+        assert isRootObjectProperty(n);
+        Relationship rel = n.getSingleRelationship(ClusterSpace.InternalRelTypes.ROOT_OBJECT_PROPERTY, Direction.INCOMING);
+        rel.delete();
+    }
+
     private void addEquivalentClassLink(Node from, Node to) {
         from.createRelationshipTo(to, ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS);
+    }
+
+    private void addEquivalentObjectPropertyLink(Node from, Node to) {
+        from.createRelationshipTo(to, ClusterSpace.PublicRelTypes.EQUIVALENT_OBJECT_PROPERTY);
     }
 
     private Node getKnownOntologiesReferenceNode() {
@@ -336,7 +504,7 @@ public class RegisterSchemaAction implements Action {
         return iter.hasNext() ? iter.next() : null;
     }
 
-    private Node link(OWLClass c, OWLReasoner r) {
+    private Node linkClass(OWLClass c, OWLReasoner r) {
         // shouldn't create a new Node if a ndoe for c already exists
         // FIXME
         Queue<Node> queue = new LinkedList<Node>();
@@ -361,15 +529,46 @@ public class RegisterSchemaAction implements Action {
         }
 
         if (!linked) {
-            System.out.println("No links for " + c.getIRI());
+            logger.warn("No links for " + c.getIRI());
             addRoot(n);
         }
 
         // no roots can be subclasses of something else
-        logger.warning("Roots len " + getRoots().size());
-        for (Node R : getRoots())
-            assert !R.hasRelationship(ClusterSpace.PublicRelTypes.IS_A, Direction.OUTGOING);
+        logger.warn("Roots len " + getRoots().size());
+        return n;
+    }
 
+    private Node linkObjectProperty(OWLObjectProperty property, OWLReasoner reasoner) {
+        // shouldn't create a new Node if a node for property already exists
+        // FIXME
+        Queue<Node> queue = new LinkedList<Node>();
+        for (Node root : getRootObjectProperties()) {
+            queue.add(root);
+        }
+
+        Node n = null;
+        n = cs.createNode();
+        n.setProperty("IRI", property.getIRI().toString());
+
+        boolean linked = false;
+        while (!queue.isEmpty()) {
+            Node x = queue.remove();
+            linked = compareObjectProperties(n, x, reasoner);
+            if (!linked) {
+                for (Node sub : subclasses(x))
+                    queue.add(sub);
+            }
+            else {
+                break;
+            }
+        }
+
+        if (!linked) {
+            logger.warn("No links for " + property.getIRI());
+            addRootObjectProperty(n);
+        }
+
+        logger.warn("Root relationships len " + getRootObjectProperties().size());
         return n;
     }
 
