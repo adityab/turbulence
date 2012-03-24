@@ -79,6 +79,17 @@ public class QueryAction implements Action {
 	public StreamingOutput stream() {
         Query q = QueryFactory.create(query);
 
+        if (q.getQueryType() != Query.QueryTypeSelect) {
+            final String message = "<result><message>Cannot handle query " + query
+                + ". Only SELECT supported.</message><error>"
+                + TurbulenceError.QUERY_PARSE_FAILED + "</error></result>";
+            return new StreamingOutput() {
+                public void write(OutputStream out) throws IOException, WebApplicationException {
+                    out.write(message.getBytes());
+                }
+            };
+        }
+
         Model model = ModelFactory.createModelForGraph(new ClusterSpaceJenaGraph());
         QueryExecution exec = QueryExecutionFactory.create(q, model);
         final ResultSet resultSet = exec.execSelect();
