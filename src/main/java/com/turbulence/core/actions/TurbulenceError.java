@@ -6,5 +6,6 @@ public enum TurbulenceError {
     ONTOLOGY_CREATION_FAILED,
     THREAD_INTERRUPTED,
     BAD_XML_DATA,
+    QUERY_PARSE_FAILED,
     UNKNOWN_ERROR // always keep this LAST in the set
 }
