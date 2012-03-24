@@ -28,6 +28,7 @@ import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.graph.impl.GraphBase;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.util.iterator.NiceIterator;
+import com.hp.hpl.jena.util.iterator.SingletonIterator;
 import com.hp.hpl.jena.query.QueryExecException;
 
 import com.turbulence.core.ClusterSpace;
@@ -218,6 +219,17 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         }
 
         if (pred.isURI()
+            && pred.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")) {
+            if (!obj.isURI())
+                throw new QueryExecException("'a' predicate expects URI object");
+            logger.warn("Start node is " + startNode.getProperty("IRI"));
+
+            Triple t = Triple.create(Node.createURI(obj.getURI()), pred, obj);
+
+            trav = trav.relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS);
+            return new ClusterSpaceJenaIterator(trav.traverse(startNode).relationships().iterator()).andThen(new SingletonIterator<Triple>(t));
+        }
+        else if (pred.isURI()
             && pred.getURI().equals("http://www.w3.org/2000/01/rdf-schema#subClassOf")) {
             trav = trav.relationships(ClusterSpace.PublicRelTypes.IS_A, relationshipDirection);
             trav = trav.relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS); // equivalent class never has direction
