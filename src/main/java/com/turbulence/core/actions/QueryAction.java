@@ -115,41 +115,49 @@ public class QueryAction implements Action {
 
         return new StreamingOutput() {
             public void write(OutputStream out) throws IOException, WebApplicationException {
+                Set<String> rowKeys = new HashSet<String>();
                 while (resultSet.hasNext()) {
-                    logger.warn("-----------------------------");
                     QuerySolution row = resultSet.next();
                     List<String> urls = new ArrayList<String>();
 
-                    //MultigetSliceQuery<String, UUID, String> query = HFactory.createMultigetSliceQuery(ksp, StringSerializer.get(), UUIDSerializer.get(), StringSerializer.get());
-                    SliceQuery<String, UUID, String> query = HFactory.createSliceQuery(ksp, StringSerializer.get(), UUIDSerializer.get(), StringSerializer.get());
-                    List<String> keys = new ArrayList<String>(resultSet.getResultVars().size());
                     for (String var : resultSet.getResultVars()) {
-                        keys.add(row.getResource(var).getURI());
-                        logger.warn(row.getResource(var).getURI());
+                        rowKeys.add(row.getResource(var).getURI());
                     }
-                    query.setKey(keys.get(0));
-                    try {
-                        //ColumnFamilyResult<UUID, String> res = template.queryColumns("a key");
-                        query.setColumnFamily("Main");
+                }
+                for (String r : rowKeys) {
+                    logger.warn("Key " + r);
+                }
 
-                        //Rows<String, UUID, String> qr = query.execute().get();
-                        ColumnSliceIterator<String, UUID, String> it = new ColumnSliceIterator<String, UUID, String>(query, null, (UUID)null, false);
-                        /*for (Row<String, UUID, String> cRow : qr) {
-                            logger.warn("ROW " + cRow.getKey());
-                            ColumnSlice<UUID, String> slice = cRow.getColumnSlice();
-                            for (HColumn<UUID, String> col : slice.getColumns()) {
-                                logger.warn(col.getName());
-                                logger.warn(col.getValue());
-                            }
-                        }*/
-                        while (it.hasNext()) {
-                            HColumn<UUID, String> col = it.next();
-                            out.write(col.getValue().getBytes());
+                for (String rowKey : rowKeys) {
+                    SliceQuery<String, UUID, String> query = HFactory.createSliceQuery(ksp, StringSerializer.get(), UUIDSerializer.get(), StringSerializer.get());
+                    query.setKey(rowKey);
+                    query.setColumnFamily("Main");
+                    UUID start = null;
+                    int count = 100;
+                    try {
+                        while (true) {
+                            query.setRange(start, null, false, count);
+                            ColumnSlice<UUID, String> slice = query.execute().get();
+                            List<HColumn<UUID, String>> columns = slice.getColumns();
+                            int origSize = columns.size();
+                            // next start is last one of this
+                            // but we also drop it so that we don't have to
+                            // serve duplicates
+                            // but if number of columns we got is LESS than
+                            // count already, then return all columns
+                            if (origSize >= count)
+                                start = columns.remove(columns.size()-1).getName();
+
+                            for (HColumn<UUID, String> col : columns)
+                                out.write(col.getValue().getBytes());
+
+                            if (origSize < count)
+                                break;
                         }
                     } catch (HectorException e) {
-                        throw new UnhandledException(e);
+                        logger.warn("Exception processing " + rowKey + " start:" + start + " count:" + count + " -- " + e);
+                        //throw new UnhandledException(e);
                     }
-                        //out.write(row.get(s).toString().getBytes());
                 }
             }
         };
