@@ -3,6 +3,7 @@ package com.turbulence.core;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -11,25 +12,33 @@ import org.apache.commons.collections.iterators.*;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.StopEvaluator;
+import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.TraversalPosition;
 import org.neo4j.graphdb.Traverser;
 import org.neo4j.kernel.Traversal;
+import org.neo4j.kernel.Uniqueness;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.graph.impl.GraphBase;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
+import com.hp.hpl.jena.util.iterator.NullIterator;
+import com.hp.hpl.jena.util.iterator.Map1;
+import com.hp.hpl.jena.util.iterator.Map1Iterator;
 import com.hp.hpl.jena.util.iterator.NiceIterator;
 import com.hp.hpl.jena.util.iterator.SingletonIterator;
 import com.hp.hpl.jena.query.QueryExecException;
+
+import com.hp.hpl.jena.util.IteratorCollection;
 
 import com.turbulence.core.ClusterSpace;
 
@@ -117,6 +126,31 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         return null;
     }
 
+    private org.neo4j.graphdb.Node getObjectProperty(final String objectPropertyIRI) {
+        String ontologyIRI;
+        if (objectPropertyIRI.lastIndexOf('#') != -1) {
+            ontologyIRI = objectPropertyIRI.substring(0, objectPropertyIRI.lastIndexOf('#'));
+        }
+        else {
+            ontologyIRI = objectPropertyIRI.substring(0, objectPropertyIRI.lastIndexOf('/')+1);
+        }
+        Index<org.neo4j.graphdb.Node> ontologyIndex = cs.index().forNodes("ontologyIndex");
+        org.neo4j.graphdb.Node ont = ontologyIndex.get("KNOWN_ONTOLOGY", ontologyIRI).getSingle();
+        if (ont == null)
+            return null;
+        // get the class
+        Traverser trav = ont.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, new ReturnableEvaluator() {
+            public boolean isReturnableNode(TraversalPosition pos) {
+                return ((String)pos.currentNode().getProperty("IRI")).equals(objectPropertyIRI.toString());
+            }
+        }, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY, Direction.INCOMING);
+
+        if (trav.iterator().hasNext())
+            return trav.iterator().next();
+
+        return null;
+    }
+
     private ClusterSpaceJenaIterator allClasses() {
         List<Iterator<Relationship>> rootIterators = new ArrayList<Iterator<Relationship>>();
         for (org.neo4j.graphdb.Node root : Traversal.description()
@@ -153,6 +187,28 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         return new ClusterSpaceJenaIterator(desc.traverse(cNode).relationships().iterator());
     }
 
+    private NiceIterator<String> objectPropertyCover(final String baseObjectPropertyIRI) {
+        List<Iterator<Relationship>> subclassIterators = new ArrayList<Iterator<Relationship>>();
+        org.neo4j.graphdb.Node baseNode = getClass(baseObjectPropertyIRI);
+        if (baseNode == null)
+            return NullIterator.instance();
+
+        TraversalDescription desc = Traversal.description()
+                                    .depthFirst()
+                                    .evaluator(Evaluators.all())
+                                    .relationships(ClusterSpace.PublicRelTypes.IS_A, Direction.INCOMING)
+                                    .relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_OBJECT_PROPERTY, Direction.BOTH);
+
+        return new Map1Iterator<org.neo4j.graphdb.Node, String>(
+            new Map1<org.neo4j.graphdb.Node, String>() {
+                public String map1(org.neo4j.graphdb.Node node) {
+                    return (String) node.getProperty("IRI");
+                }
+            },
+            desc.traverse(baseNode).nodes().iterator()
+        );
+    }
+
     protected ExtendedIterator<Triple> graphBaseFind(TripleMatch tm) {
         Triple triple = tm.asTriple();
         Node sub  = triple.getSubject();
@@ -162,6 +218,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
 
         TraversalDescription trav = Traversal.description()
                                     .breadthFirst()
+                                    .uniqueness(Uniqueness.NONE)
                                     .evaluator(Evaluators.all())
                                     .relationships(ClusterSpace.InternalRelTypes.ROOT);
 
@@ -222,7 +279,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             && pred.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")) {
             if (!obj.isURI())
                 throw new QueryExecException("'a' predicate expects URI object");
-            logger.warn("Start node is " + startNode.getProperty("IRI"));
 
             Triple t = Triple.create(Node.createURI(obj.getURI()), pred, obj);
 
@@ -235,7 +291,20 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             trav = trav.relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS); // equivalent class never has direction
         }
         else if (pred.isURI()) { /* custom relationship */
-            throw new QueryExecException("TODO: implement custom relationship evaluator");
+            final Set<String> iris = IteratorCollection.iteratorToSet(objectPropertyCover(pred.getURI()));
+            logger.warn("IRIs " + iris);
+            trav = trav.relationships(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP, relationshipDirection);
+            trav = trav.evaluator(new Evaluator() {
+                public Evaluation evaluate(Path path) {
+                    if (path.lastRelationship() != null
+                        && path.lastRelationship().getType().equals(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP)
+                        && iris.contains((String)path.lastRelationship().getProperty("IRI"))) {
+                        return Evaluation.INCLUDE_AND_PRUNE;
+                    }
+
+                    return Evaluation.EXCLUDE_AND_CONTINUE;
+                }
+            });
         }
         else if (pred == Node.ANY) {
             for (ClusterSpace.PublicRelTypes type : ClusterSpace.PublicRelTypes.values())
