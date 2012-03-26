@@ -187,6 +187,17 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         return new ClusterSpaceJenaIterator(desc.traverse(cNode).relationships().iterator());
     }
 
+    // TODO don't put equivalent classes here
+    private Iterable<org.neo4j.graphdb.Node> superclasses(final org.neo4j.graphdb.Node cNode) {
+        TraversalDescription desc = Traversal.description()
+                                    .depthFirst()
+                                    .evaluator(Evaluators.all())
+                                    .relationships(ClusterSpace.PublicRelTypes.IS_A, Direction.OUTGOING)
+                                    .relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS, Direction.BOTH);
+
+        return desc.traverse(cNode).nodes();
+    }
+
     private NiceIterator<String> objectPropertyCover(final String baseObjectPropertyIRI) {
         List<Iterator<Relationship>> subclassIterators = new ArrayList<Iterator<Relationship>>();
         org.neo4j.graphdb.Node baseNode = getClass(baseObjectPropertyIRI);
@@ -305,6 +316,15 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                     return Evaluation.EXCLUDE_AND_CONTINUE;
                 }
             });
+
+            ExtendedIterator<Triple> result = new ClusterSpaceJenaIterator(trav.traverse(startNode).relationships().iterator());
+            final Iterable<org.neo4j.graphdb.Node> superClasses = superclasses(startNode);
+            // try all superclasses also since the relationship
+            // domain might actually be a superclass
+            for (org.neo4j.graphdb.Node n : superClasses) {
+                result = result.andThen(new ClusterSpaceJenaIterator(trav.traverse(n).relationships().iterator()));
+            }
+            return result;
         }
         else if (pred == Node.ANY) {
             for (ClusterSpace.PublicRelTypes type : ClusterSpace.PublicRelTypes.values())
