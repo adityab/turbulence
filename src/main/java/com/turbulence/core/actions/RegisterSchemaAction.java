@@ -146,6 +146,8 @@ public class RegisterSchemaAction implements Action {
                 if (ax.getDomain().isAnonymous())
                     continue;
                 Node rNode = linkObjectProperty(ax.getProperty().asOWLObjectProperty(), reasoner);
+                if (rNode != null)
+                    rNode.createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY);
                 for (OWLClassExpression range : ax.getProperty().getRanges(ont)) {
                     if (range.isAnonymous())
                         continue;
