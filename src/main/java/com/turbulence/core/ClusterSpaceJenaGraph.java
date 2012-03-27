@@ -10,7 +10,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.iterators.*;
 
+import org.neo4j.graphalgo.GraphAlgoFactory;
+import org.neo4j.graphalgo.PathFinder;
+
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.Expander;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
@@ -23,6 +27,7 @@ import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.TraversalPosition;
 import org.neo4j.graphdb.Traverser;
+import org.neo4j.kernel.StandardExpander;
 import org.neo4j.kernel.Traversal;
 import org.neo4j.kernel.Uniqueness;
 
@@ -327,8 +332,31 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             return result;
         }
         else if (pred == Node.ANY) {
-            for (ClusterSpace.PublicRelTypes type : ClusterSpace.PublicRelTypes.values())
-                trav = trav.relationships(type, relationshipDirection);
+            if (sub.isURI() && obj.isURI()) {
+            }
+            else {
+                throw new RuntimeException("Arbitrary relationship expects well defined subject and object");
+            }
+
+            org.neo4j.graphdb.Node subNode = getClass(sub.getURI());
+            org.neo4j.graphdb.Node objNode = getClass(obj.getURI());
+
+            if (subNode == null || objNode == null) {
+                throw new RuntimeException("Unknown concepts");
+            }
+
+            StandardExpander expander = StandardExpander.DEFAULT
+                                        .add(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS)
+                                        .add(ClusterSpace.PublicRelTypes.IS_A)
+                                        .add(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP);
+
+            PathFinder<Path> pf = GraphAlgoFactory.allSimplePaths(expander, 4);
+
+            ExtendedIterator<Triple> it = new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
+            for (Path path : pf.findAllPaths(subNode, objNode)) {
+                it = it.andThen(new ClusterSpaceJenaIterator(path.relationships().iterator()));
+            }
+            return it;
         }
         else {
             throw new QueryExecException("Unknown relationship type");
