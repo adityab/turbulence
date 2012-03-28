@@ -133,7 +133,13 @@ public class RegisterSchemaAction implements Action {
         tx = cs.beginTx();
         try {
             for (OWLClass c : ont.getClassesInSignature(false /*exclude imports closure*/)) {
-                Node cNode = linkClass(c, reasoner);
+                // shouldn't create a new Node if a ndoe for c already exists
+                // FIXME
+                Node n = null;
+                n = cs.createNode();
+                n.setProperty("IRI", c.getIRI().toString());
+
+                Node cNode = linkClass(c, n, reasoner);
                 if (cNode != null)
                     cNode.createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY);
             }
@@ -506,17 +512,11 @@ public class RegisterSchemaAction implements Action {
         return iter.hasNext() ? iter.next() : null;
     }
 
-    private Node linkClass(OWLClass c, OWLReasoner r) {
-        // shouldn't create a new Node if a ndoe for c already exists
-        // FIXME
+    private Node linkClass(OWLClass c, Node n, OWLReasoner r) {
         Queue<Node> queue = new LinkedList<Node>();
         for (Node root : getRoots()) {
             queue.add(root);
         }
-        Node n = null;
-        n = cs.createNode();
-        n.setProperty("IRI", c.getIRI().toString());
-
         boolean linked = false;
         while (!queue.isEmpty()) {
             Node x = queue.remove();

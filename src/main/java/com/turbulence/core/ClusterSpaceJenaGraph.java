@@ -263,9 +263,9 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 if (objNode == null)
                     return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
 
-                trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(objNode));
+                /*trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(objNode));
                 for (org.neo4j.graphdb.Node equiv : cs.getEquivalentClasses(objNode))
-                    trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(equiv));
+                    trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(equiv));*/
             }
         }
         else if (obj.isURI()) {
