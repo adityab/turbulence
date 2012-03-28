@@ -35,6 +35,7 @@ import me.prettyprint.cassandra.service.ThriftKsDef;
 import me.prettyprint.hector.api.Cluster;
 
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
+import me.prettyprint.hector.api.ddl.ColumnType;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 
@@ -92,6 +93,7 @@ public class TurbulenceDriver {
         conceptsInstanceDataCf.setKeyValidationClass("UTF8Type");
 
         ColumnFamilyDefinition triplesCf = HFactory.createColumnFamilyDefinition("Turbulence", "Triples", ComparatorType.UTF8TYPE);
+        triplesCf.setColumnType(ColumnType.SUPER);
         conceptsInstanceDataCf.setKeyValidationClass("UTF8Type");
 
         KeyspaceDefinition kspd = cassandra.describeKeyspace("Turbulence");
