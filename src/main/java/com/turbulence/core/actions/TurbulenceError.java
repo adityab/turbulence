@@ -7,5 +7,6 @@ public enum TurbulenceError {
     THREAD_INTERRUPTED,
     BAD_XML_DATA,
     QUERY_PARSE_FAILED,
+    IO_ERROR,
     UNKNOWN_ERROR // always keep this LAST in the set
 }

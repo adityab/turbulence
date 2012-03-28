@@ -1,5 +1,7 @@
 package com.turbulence.core;
 
+import java.util.Arrays;
+
 import java.util.logging.Logger;
 
 import java.io.File;
@@ -9,6 +11,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import java.util.UUID;
+
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import org.json.*;
@@ -16,6 +20,29 @@ import org.json.*;
 import com.turbulence.util.Config;
 import com.turbulence.util.ConfigParseException;
 import com.turbulence.util.OntologyMapper;
+
+import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
+
+import me.prettyprint.cassandra.serializers.StringSerializer;
+
+import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
+import me.prettyprint.cassandra.service.template.SuperCfTemplate;
+import me.prettyprint.cassandra.service.template.ThriftColumnFamilyTemplate;
+import me.prettyprint.cassandra.service.template.ThriftSuperCfTemplate;
+
+import me.prettyprint.cassandra.service.ThriftKsDef;
+
+import me.prettyprint.hector.api.Cluster;
+
+import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
+import me.prettyprint.hector.api.ddl.ColumnType;
+import me.prettyprint.hector.api.ddl.ComparatorType;
+import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
+
+import me.prettyprint.hector.api.factory.HFactory;
+
+import me.prettyprint.hector.api.HConsistencyLevel;
+import me.prettyprint.hector.api.Keyspace;
 
 public class TurbulenceDriver {
     private static final String CLUSTERSPACE_FILE = "clusterspace.db";
@@ -32,6 +59,11 @@ public class TurbulenceDriver {
     private static ExecutorService threadPool;
 
     private static Logger logger;
+
+    private static Cluster cassandra;
+    private static ColumnFamilyTemplate<String, String> conceptsTemplate;
+    private static ColumnFamilyTemplate<String, String> conceptsInstanceDataTemplate;
+    private static SuperCfTemplate<String, String, String> triplesTemplate;
 
     public static void initialize(Config config) {
         logger = Logger.getLogger("com.turbulence.core.TurbulenceDriver");
@@ -50,6 +82,34 @@ public class TurbulenceDriver {
             logger.severe("Could not create directory " + dataDir);
             System.exit(1);
         }
+
+        cassandra = HFactory.getOrCreateCluster("turbulence", "localhost:9160");
+        ColumnFamilyDefinition conceptsCf = HFactory.createColumnFamilyDefinition("Turbulence",
+                "Concepts",
+                ComparatorType.UTF8TYPE);
+        conceptsCf.setKeyValidationClass("UTF8Type");
+
+        ColumnFamilyDefinition conceptsInstanceDataCf = HFactory.createColumnFamilyDefinition("Turbulence", "ConceptsInstanceData", ComparatorType.UTF8TYPE);
+        conceptsInstanceDataCf.setKeyValidationClass("UTF8Type");
+
+        ColumnFamilyDefinition triplesCf = HFactory.createColumnFamilyDefinition("Turbulence", "Triples", ComparatorType.UTF8TYPE);
+        triplesCf.setColumnType(ColumnType.SUPER);
+        conceptsInstanceDataCf.setKeyValidationClass("UTF8Type");
+
+        KeyspaceDefinition kspd = cassandra.describeKeyspace("Turbulence");
+        if (kspd == null) {
+            KeyspaceDefinition newKeyspace = HFactory.createKeyspaceDefinition("Turbulence", ThriftKsDef.DEF_STRATEGY_CLASS, 1 /*TODO replication factor*/, Arrays.asList(conceptsCf, conceptsInstanceDataCf, triplesCf));
+            cassandra.addKeyspace(newKeyspace, true);
+        }
+        // FIXME: in a cluster we don't want this
+        ConfigurableConsistencyLevel lvl = new ConfigurableConsistencyLevel();
+        lvl.setDefaultReadConsistencyLevel(HConsistencyLevel.ONE);
+        lvl.setDefaultWriteConsistencyLevel(HConsistencyLevel.ONE);
+        Keyspace ksp = HFactory.createKeyspace("Turbulence", cassandra, lvl);
+
+        conceptsTemplate = new ThriftColumnFamilyTemplate<String, String>(ksp, "Concepts", StringSerializer.get(), StringSerializer.get());
+        conceptsInstanceDataTemplate = new ThriftColumnFamilyTemplate<String, String>(ksp, "ConceptsInstanceData", StringSerializer.get(), StringSerializer.get());
+        triplesTemplate = new ThriftSuperCfTemplate<String, String, String>(ksp, "Triples", StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
 
         threadPool = Executors.newFixedThreadPool(20);
     }
@@ -84,5 +144,17 @@ public class TurbulenceDriver {
 
     public static File getOntologyStoreDirectory() {
         return new File(dataDir, ONTOLOGY_STORE_DIR);
+    }
+
+    public static ColumnFamilyTemplate<String, String> getConceptsTemplate() {
+        return conceptsTemplate;
+    }
+
+    public static ColumnFamilyTemplate<String, String> getConceptsInstanceDataTemplate() {
+        return conceptsInstanceDataTemplate;
+    }
+
+    public static SuperCfTemplate<String, String, String> getTriplesTemplate() {
+        return triplesTemplate;
     }
 }
