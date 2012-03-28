@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.util.UUID;
 
@@ -33,12 +35,17 @@ import org.xml.sax.SAXParseException;
 import com.hp.hpl.jena.rdf.arp.ALiteral;
 import com.hp.hpl.jena.rdf.arp.AResource;
 import com.hp.hpl.jena.rdf.arp.ARP;
+import com.hp.hpl.jena.rdf.arp.ARPErrorNumbers;
+import com.hp.hpl.jena.rdf.arp.ARPEventHandler;
 import com.hp.hpl.jena.rdf.arp.NamespaceHandler;
 import com.hp.hpl.jena.rdf.arp.StatementHandler;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFWriter;
 import com.hp.hpl.jena.rdf.model.Resource;
+
+import com.hp.hpl.jena.vocabulary.RDF;
 
 import com.turbulence.core.TurbulenceDriver;
 
@@ -51,14 +58,14 @@ import me.prettyprint.hector.api.ddl.*;
 import me.prettyprint.hector.api.exceptions.*;
 import me.prettyprint.hector.api.factory.HFactory;
 
-public class StoreDataAction implements Action, ErrorHandler, NamespaceHandler, StatementHandler {
+public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
     private static final Log logger = LogFactory.getLog(StoreDataAction.class);
 
     private InputStream input;
     private ARP rdfParser;
     private XMLOutputFactory outputFactory;
 
-    Model currentModel = null;
+    Model currentModel;
     Resource currentSubject = null;
 
     ColumnFamilyTemplate<String, String> conceptsTemplate;
@@ -68,21 +75,17 @@ public class StoreDataAction implements Action, ErrorHandler, NamespaceHandler, 
         input = in;
         rdfParser = new ARP();
         rdfParser.getHandlers().setErrorHandler(this);
+        rdfParser.getHandlers().setExtendedHandler(this);
         rdfParser.getHandlers().setNamespaceHandler(this);
         rdfParser.getHandlers().setStatementHandler(this);
+        //rdfParser.getOptions().setLaxErrorMode();
 
         conceptsTemplate = TurbulenceDriver.getConceptsTemplate();
         conceptsInstanceDataTemplate = TurbulenceDriver.getConceptsInstanceDataTemplate();
         triplesTemplate = TurbulenceDriver.getTriplesTemplate();
-    }
 
-        /*ColumnFamilyUpdater<String, UUID> up = template.createUpdater(fullName);
-        up.setString(UUID.randomUUID(), data);
-        try {
-            template.update(up);
-        } catch (HectorException e) {
-            throw new UnhandledException(e);
-        }*/
+        currentModel = ModelFactory.createDefaultModel();
+    }
 
     public Result perform() {
         Result r = new Result();
@@ -110,77 +113,106 @@ public class StoreDataAction implements Action, ErrorHandler, NamespaceHandler, 
     }
 
     public void startPrefixMapping(String prefix, String uri) {
-        logger.warn("Started prefix matching " + prefix + ": " + uri);
+        currentModel.setNsPrefix(prefix, uri);
     }
 
     public void endPrefixMapping(String prefix) {
+        currentModel.removeNsPrefix(prefix);
     }
 
     public void statement(AResource subject, AResource predicate, AResource object) {
         if (currentSubject == null || !currentSubject.getURI().equals(subject.getURI())) {
             dumpRDFInstance();
-            resetRDFInstance(subject.getURI());
+            resetRDFInstance(subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI());
         }
 
         currentSubject.addProperty(currentModel.createProperty(predicate.getURI()), currentModel.createResource(object.getURI()));
 
-        if (predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")) {
-            logger.warn("Saving new entry of type " + object.getURI());
+        if (predicate.getURI().equals(RDF.type.getURI())) {
+            //logger.warn("Saving new entry of type " + object.getURI());
             ColumnFamilyUpdater<String, String> updater = conceptsTemplate.createUpdater(object.getURI());
-            updater.setString(DigestUtils.md5Hex(subject.getURI()), subject.getURI());
+
+            if (subject.isAnonymous())
+                updater.setString(DigestUtils.md5Hex(subject.getAnonymousID()), subject.getAnonymousID());
+            else
+                updater.setString(DigestUtils.md5Hex(subject.getURI()), subject.getURI());
 
             try {
-                //conceptsTemplate.update(updater);
+                conceptsTemplate.update(updater);
             } catch (HectorException e) {
                 throw new UnhandledException(e);
             }
         }
         else {
-            saveTriple(subject.getURI(), predicate.getURI(), object.getURI());
+            saveTriple(subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI(), predicate.getURI(), object.isAnonymous() ? object.getAnonymousID() : object.getURI());
         }
-        logger.warn("statementAResource: " + subject + " " + predicate + " " + object);
+        //logger.warn("statementAResource: " + subject + " " + predicate + " " + object);
     }
 
     public void statement(AResource subject, AResource predicate, ALiteral object) {
         if (currentSubject == null || !currentSubject.getURI().equals(subject.getURI())) {
             dumpRDFInstance();
-            resetRDFInstance(subject.getURI());
+            resetRDFInstance(subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI());
         }
         currentSubject.addProperty(currentModel.createProperty(predicate.getURI()), object.toString());
-        saveTriple(subject.getURI(), predicate.getURI(), object.toString());
-        logger.warn("statementALiteral: " + subject + " " + predicate + " " + object);
+        saveTriple(subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI(), predicate.getURI(), object.toString());
+        //logger.warn("statementALiteral: " + subject + " " + predicate + " " + object);
     }
 
     private void saveTriple(String subject, String predicate, String object) {
-        logger.warn("Saving triple with row key " + subject + " SCol: " + predicate + " colName: " + DigestUtils.md5Hex(object) + " colValue: " + object);
+        //logger.warn("Saving triple with row key " + subject + " SCol: " + predicate + " colName: " + DigestUtils.md5Hex(object) + " colValue: " + object);
         SuperCfUpdater<String, String, String> updater = triplesTemplate.createUpdater(subject, predicate);
         updater.setString(DigestUtils.md5Hex(object), object);
         try {
-            //updater.update();
+            triplesTemplate.update(updater);
         } catch (HectorException e) {
             throw new UnhandledException(e);
         }
     }
 
     private void dumpRDFInstance() {
-        if (currentSubject == null)
+        if (currentSubject == null || currentSubject.getPropertyResourceValue(RDF.type) == null)
             return;
         StringWriter w = new StringWriter();
-        currentModel.write(w);
-        logger.warn("Will save dump " + w.toString());
-        logger.warn("to row " + currentSubject.getPropertyResourceValue(currentModel.createProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")).getURI());
-        ColumnFamilyUpdater<String, String> updater = conceptsInstanceDataTemplate.createUpdater(currentSubject.getPropertyResourceValue(currentModel.createProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")).getURI());
+        RDFWriter writer = currentModel.getWriter();
+        writer.setProperty("allowBadURIs", true);
+        writer.write(currentModel, w, null);
+        //logger.warn("Will save dump " + w.toString());
+        //logger.warn("to row " + currentSubject.getPropertyResourceValue(RDF.type).getURI() + " column " + currentSubject.getURI());
+        ColumnFamilyUpdater<String, String> updater = conceptsInstanceDataTemplate.createUpdater(currentSubject.getPropertyResourceValue(RDF.type).getURI());
 
-        updater.setString(currentSubject.getURI(), w.toString());
+        if (currentSubject.isAnon())
+            updater.setString(currentSubject.getId().toString(), w.toString());
+        else
+            updater.setString(currentSubject.getURI(), w.toString());
         try {
-            //updater.update();
+            conceptsInstanceDataTemplate.update(updater);
         } catch (HectorException e) {
             throw new UnhandledException(e);
         }
     }
 
     private void resetRDFInstance(String subject) {
-        currentModel = ModelFactory.createDefaultModel();
+        currentModel.removeAll();
         currentSubject = currentModel.createResource(subject);
+    }
+
+    public void endBNodeScope(AResource bnode)
+    {
+    }
+
+    public boolean discardNodesWithNodeID()
+    {
+        return false;
+    }
+
+    public void startRDF()
+    {
+    }
+
+    public void endRDF()
+    {
+        // take care of the last subject
+        dumpRDFInstance();
     }
 }
