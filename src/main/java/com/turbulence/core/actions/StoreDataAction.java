@@ -146,9 +146,7 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
                 throw new UnhandledException(e);
             }
         }
-        else {
-            saveTriple(subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI(), predicate.getURI(), object.isAnonymous() ? object.getAnonymousID() : object.getURI());
-        }
+        saveTriple(subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI(), predicate.getURI(), object.isAnonymous() ? object.getAnonymousID() : object.getURI());
         //logger.warn("statementAResource: " + subject + " " + predicate + " " + object);
     }
 
