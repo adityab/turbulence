@@ -11,8 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import java.util.UUID;
-
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import org.json.*;
@@ -61,6 +59,7 @@ public class TurbulenceDriver {
     private static Logger logger;
 
     private static Cluster cassandra;
+    private static Keyspace keyspace;
     private static ColumnFamilyTemplate<String, String> conceptsTemplate;
     private static ColumnFamilyTemplate<String, String> conceptsInstanceDataTemplate;
     private static SuperCfTemplate<String, String, String> triplesTemplate;
@@ -105,11 +104,11 @@ public class TurbulenceDriver {
         ConfigurableConsistencyLevel lvl = new ConfigurableConsistencyLevel();
         lvl.setDefaultReadConsistencyLevel(HConsistencyLevel.ONE);
         lvl.setDefaultWriteConsistencyLevel(HConsistencyLevel.ONE);
-        Keyspace ksp = HFactory.createKeyspace("Turbulence", cassandra, lvl);
+        keyspace = HFactory.createKeyspace("Turbulence", cassandra, lvl);
 
-        conceptsTemplate = new ThriftColumnFamilyTemplate<String, String>(ksp, "Concepts", StringSerializer.get(), StringSerializer.get());
-        conceptsInstanceDataTemplate = new ThriftColumnFamilyTemplate<String, String>(ksp, "ConceptsInstanceData", StringSerializer.get(), StringSerializer.get());
-        triplesTemplate = new ThriftSuperCfTemplate<String, String, String>(ksp, "Triples", StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+        conceptsTemplate = new ThriftColumnFamilyTemplate<String, String>(keyspace, "Concepts", StringSerializer.get(), StringSerializer.get());
+        conceptsInstanceDataTemplate = new ThriftColumnFamilyTemplate<String, String>(keyspace, "ConceptsInstanceData", StringSerializer.get(), StringSerializer.get());
+        triplesTemplate = new ThriftSuperCfTemplate<String, String, String>(keyspace, "Triples", StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
 
         threadPool = Executors.newFixedThreadPool(20);
     }
@@ -144,6 +143,10 @@ public class TurbulenceDriver {
 
     public static File getOntologyStoreDirectory() {
         return new File(dataDir, ONTOLOGY_STORE_DIR);
+    }
+
+    public static Keyspace getKeyspace() {
+        return keyspace;
     }
 
     public static ColumnFamilyTemplate<String, String> getConceptsTemplate() {
