@@ -106,10 +106,13 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
     }
 
     public void error(SAXParseException exception) {
+        logger.warn("E");
     }
     public void fatalError(SAXParseException exception) {
+        logger.warn("FE");
     }
     public void warning(SAXParseException exception) {
+        logger.warn("W");
     }
 
     public void startPrefixMapping(String prefix, String uri) {
