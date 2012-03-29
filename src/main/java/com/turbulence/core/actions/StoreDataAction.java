@@ -4,24 +4,9 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
-import java.util.UUID;
-
 import org.apache.commons.codec.digest.DigestUtils;
 
-import javax.xml.stream.events.StartElement;
-import javax.xml.stream.events.XMLEvent;
-
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLEventWriter;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.lang.UnhandledException;
 
@@ -35,10 +20,7 @@ import org.xml.sax.SAXParseException;
 import com.hp.hpl.jena.rdf.arp.ALiteral;
 import com.hp.hpl.jena.rdf.arp.AResource;
 import com.hp.hpl.jena.rdf.arp.ARP;
-import com.hp.hpl.jena.rdf.arp.ARPErrorNumbers;
 import com.hp.hpl.jena.rdf.arp.ARPEventHandler;
-import com.hp.hpl.jena.rdf.arp.NamespaceHandler;
-import com.hp.hpl.jena.rdf.arp.StatementHandler;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -49,14 +31,8 @@ import com.hp.hpl.jena.vocabulary.RDF;
 
 import com.turbulence.core.TurbulenceDriver;
 
-import me.prettyprint.cassandra.model.*;
-import me.prettyprint.cassandra.serializers.*;
-import me.prettyprint.cassandra.service.*;
 import me.prettyprint.cassandra.service.template.*;
-import me.prettyprint.hector.api.*;
-import me.prettyprint.hector.api.ddl.*;
 import me.prettyprint.hector.api.exceptions.*;
-import me.prettyprint.hector.api.factory.HFactory;
 
 public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
     private static final Log logger = LogFactory.getLog(StoreDataAction.class);
