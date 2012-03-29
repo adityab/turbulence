@@ -51,6 +51,9 @@ public class RegisterSchemaAction implements Action {
     private Index<Node> ontologyIndex;
     private static final String KNOWN_ONTOLOGY_KEY = "KNOWN_ONTOLOGY";
 
+    private Index<Node> conceptIndex;
+    private static final String CONCEPT_INDEX_KEY = "CONCEPT";
+
     protected RegisterSchemaAction(URI uri)
     {
         schemaURI = uri;
@@ -62,6 +65,7 @@ public class RegisterSchemaAction implements Action {
     public Result perform() {
         cs = TurbulenceDriver.getClusterSpace();
         ontologyIndex = cs.index().forNodes("ontologyIndex");
+        conceptIndex = cs.index().forNodes("conceptIndex");
 
         logger.warn(this.getClass().getName()+ " perform "+ schemaURI);
         IRI iri = IRI.create(schemaURI);
@@ -138,6 +142,11 @@ public class RegisterSchemaAction implements Action {
                 Node n = null;
                 n = cs.createNode();
                 n.setProperty("IRI", c.getIRI().toString());
+                Node previous = conceptIndex.putIfAbsent(n, CONCEPT_INDEX_KEY, c.getIRI().toString());
+                if (previous == null)
+                    n.createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY);
+                else
+                    n.delete();
 
                 Node cNode = linkClass(c, n, reasoner);
                 if (cNode != null)
@@ -494,22 +503,11 @@ public class RegisterSchemaAction implements Action {
         return ko.getEndNode();
     }
 
-    private Node getClassNode(IRI ontologyIRI, OWLClass clazz) {
+    private Node getClassNode(OWLClass clazz) {
         IRI iri = clazz.getIRI();
-        Index<Node> index = cs.index().forNodes("ontologyIndex");
-        Node ontNode = index.get(KNOWN_ONTOLOGY_KEY, ontologyIRI).getSingle();
-        if (ontNode == null)
-            return null;
-
-        final IRI clazzIRI = clazz.getIRI();
-        Traverser trav = ontNode.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, new ReturnableEvaluator() {
-            public boolean isReturnableNode(TraversalPosition pos) {
-                return pos.notStartNode() && pos.currentNode().getProperty("IRI").equals(clazzIRI.toString());
-            }
-        }, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY, Direction.INCOMING);
-
-        Iterator<Node> iter = trav.iterator();
-        return iter.hasNext() ? iter.next() : null;
+        Index<Node> index = cs.index().forNodes("conceptIndex");
+        Node classNode = index.get(CONCEPT_INDEX_KEY, iri.toString()).getSingle();
+        return classNode;
     }
 
     private Node linkClass(OWLClass c, Node n, OWLReasoner r) {
@@ -575,10 +573,10 @@ public class RegisterSchemaAction implements Action {
     }
 
     private void createObjectPropertyRelationship(IRI ontologyIRI, OWLObjectProperty property, OWLClass domain, OWLClass range) {
-        Node domainNode = getClassNode(ontologyIRI, domain);
+        Node domainNode = getClassNode(domain);
         if (domainNode == null)
             return;
-        Node rangeNode = getClassNode(ontologyIRI, range);
+        Node rangeNode = getClassNode(range);
         if (rangeNode == null)
             return;
 
@@ -588,13 +586,15 @@ public class RegisterSchemaAction implements Action {
             Relationship rel = domainNode.createRelationshipTo(rangeNode, ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP);
             rel.setProperty("IRI", property.getIRI().toString());
             tx.success();
+        } catch (Exception e) {
+            logger.warn(e);
         } finally {
             tx.finish();
         }
     }
 
     private void createDataProperty(IRI ontologyIRI, OWLDataProperty property, OWLClass domain, OWLDataRange range) {
-        Node domainNode = getClassNode(ontologyIRI, domain);
+        Node domainNode = getClassNode(domain);
         if (domainNode == null)
             return;
 
