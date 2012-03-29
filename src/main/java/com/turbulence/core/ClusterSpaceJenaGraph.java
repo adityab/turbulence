@@ -283,6 +283,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 throw new QueryExecException("'a' predicate expects URI object");
 
             trav = trav.relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS);
+            ExtendedIterator<Triple> total = NullIterator.instance();
             //return new ClusterSpaceJenaIterator(trav.traverse(startNode).relationships().iterator()).andThen(new SingletonIterator<Triple>(t));
             for (org.neo4j.graphdb.Node n : trav.traverse(startNode).nodes()) {
                 String classIRI = (String)n.getProperty("IRI");
@@ -292,9 +293,9 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 query.setColumnFamily("Concepts");
 
                 Iterator<HColumn<String, String>> it = new AllColumnsIterator<String, String>(query);
-                // TODO FIXME DONT RETURN HERE, CHAIN THEM TOGETHER
-                return new ConceptsInstancesIterator(classIRI, it);
+                total = total.andThen(new ConceptsInstancesIterator(classIRI, it));
             }
+            return total;
         }
         else if (pred.isURI()
             && pred.getURI().equals("http://www.w3.org/2000/01/rdf-schema#subClassOf")) {
