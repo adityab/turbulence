@@ -165,7 +165,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
 
     // class and all subclasses
     private ClusterSpaceJenaIterator classCover(final String classIRI) {
-        List<Iterator<Relationship>> subclassIterators = new ArrayList<Iterator<Relationship>>();
         org.neo4j.graphdb.Node cNode = getClass(classIRI);
         if (cNode == null)
             return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
@@ -191,7 +190,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
     }
 
     private NiceIterator<String> objectPropertyCover(final String baseObjectPropertyIRI) {
-        List<Iterator<Relationship>> subclassIterators = new ArrayList<Iterator<Relationship>>();
         org.neo4j.graphdb.Node baseNode = getClass(baseObjectPropertyIRI);
         if (baseNode == null)
             return NullIterator.instance();
@@ -284,8 +282,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             if (!obj.isURI())
                 throw new QueryExecException("'a' predicate expects URI object");
 
-            Triple t = Triple.create(Node.createURI(obj.getURI()), pred, obj);
-
             trav = trav.relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS);
             //return new ClusterSpaceJenaIterator(trav.traverse(startNode).relationships().iterator()).andThen(new SingletonIterator<Triple>(t));
             for (org.neo4j.graphdb.Node n : trav.traverse(startNode).nodes()) {
@@ -296,6 +292,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 query.setColumnFamily("Concepts");
 
                 Iterator<HColumn<String, String>> it = new AllColumnsIterator<String, String>(query);
+                // TODO FIXME DONT RETURN HERE, CHAIN THEM TOGETHER
                 return new ConceptsInstancesIterator(classIRI, it);
             }
         }

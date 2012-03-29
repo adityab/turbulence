@@ -6,8 +6,6 @@ import java.io.StringWriter;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-import javax.xml.stream.XMLOutputFactory;
-
 import org.apache.commons.lang.UnhandledException;
 
 import org.apache.commons.logging.Log;
@@ -39,7 +37,6 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
 
     private InputStream input;
     private ARP rdfParser;
-    private XMLOutputFactory outputFactory;
 
     Model currentModel;
     Resource currentSubject = null;

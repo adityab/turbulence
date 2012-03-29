@@ -11,13 +11,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import org.semanticweb.owlapi.model.OWLOntologyManager;
-
 import org.json.*;
 
 import com.turbulence.util.Config;
 import com.turbulence.util.ConfigParseException;
-import com.turbulence.util.OntologyMapper;
 
 import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
 
@@ -50,8 +47,6 @@ public class TurbulenceDriver {
 
     private static ClusterSpace clusterSpace;
 
-    private OWLOntologyManager ontologyManager;
-    private OntologyMapper ontologyMapper;
     private static Config config;
 
     private static ExecutorService threadPool;

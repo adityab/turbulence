@@ -1,9 +1,5 @@
 package com.turbulence.core.actions;
 
-import java.lang.ClassNotFoundException;
-import java.lang.IllegalAccessException;
-import java.lang.InstantiationException;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -17,10 +13,6 @@ import org.apache.commons.lang.UnhandledException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.apache.xerces.xs.XSImplementation;
-import org.apache.xerces.xs.XSLoader;
-import org.apache.xerces.xs.XSModel;
-
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.*;
 import org.neo4j.graphdb.traversal.Evaluators;
@@ -31,8 +23,6 @@ import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.io.UnparsableOntologyException;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
-
-import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 
 import com.clarkparsia.pellet.owlapiv3.*;
 
@@ -210,19 +200,6 @@ public class RegisterSchemaAction implements Action {
     }
 
     private Result handleXMLSchema(final IRI iri) {
-        XSModel schema;
-        try {
-            System.setProperty(DOMImplementationRegistry.PROPERTY,
-                    "org.apache.xerces.dom.DOMXSImplementationSourceImpl");
-            DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
-            XSImplementation impl = (XSImplementation) registry.getDOMImplementation("XS-Loader");
-            XSLoader schemaLoader = impl.createXSLoader(null);
-            schema = schemaLoader.loadURI(iri.toURI().toString());
-        } catch (ClassNotFoundException e) {
-        } catch (IllegalAccessException e) {
-        } catch (InstantiationException e) {
-        }
-
         return null;
     }
 

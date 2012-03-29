@@ -73,7 +73,6 @@ public class QueryAction implements Action {
                 Set<String> rowKeys = new HashSet<String>();
                 while (resultSet.hasNext()) {
                     QuerySolution row = resultSet.next();
-                    List<String> urls = new ArrayList<String>();
 
                     for (String var : resultSet.getResultVars()) {
                         rowKeys.add(row.getResource(var).getURI());
