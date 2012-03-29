@@ -106,7 +106,7 @@ public class RegisterSchemaAction implements Action {
         }
         logger.warn("loaded " + ont);
 
-        Node ontNode;
+        Node ontNode = null;
         Transaction tx = cs.beginTx();
         try {
             // create a Node for the ontology itself
@@ -129,16 +129,17 @@ public class RegisterSchemaAction implements Action {
 
             getKnownOntologiesReferenceNode().createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.KNOWN_ONTOLOGY);
             tx.success();
+        } catch (Exception e) {
+            logger.warn(e);
         } finally {
             tx.finish();
         }
 
         OWLReasoner reasoner = PelletReasonerFactory.getInstance().createReasoner(ont);
-        tx = cs.beginTx();
-        try {
-            for (OWLClass c : ont.getClassesInSignature(false /*exclude imports closure*/)) {
-                // shouldn't create a new Node if a ndoe for c already exists
-                // FIXME
+
+        for (OWLClass c : ont.getClassesInSignature(false /*exclude imports closure*/)) {
+            tx = cs.beginTx();
+            try {
                 Node n = null;
                 n = cs.createNode();
                 n.setProperty("IRI", c.getIRI().toString());
@@ -148,18 +149,25 @@ public class RegisterSchemaAction implements Action {
                 else
                     n.delete();
 
-                Node cNode = linkClass(c, n, reasoner);
-                if (cNode != null)
-                    cNode.createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY);
+                linkClass(c, previous == null ? n : previous, reasoner);
+                tx.success();
+            } catch (Exception e) {
+                logger.warn(e);
+            } finally {
+                tx.finish();
             }
+        }
 
-            for (OWLAxiom c : ont.getAxioms(AxiomType.OBJECT_PROPERTY_DOMAIN)) {
-                OWLObjectPropertyDomainAxiom ax = (OWLObjectPropertyDomainAxiom) c;
-                // TODO: if domain or range is a union, then run for each class
-                if (ax.getProperty().isAnonymous())
-                    continue;
-                if (ax.getDomain().isAnonymous())
-                    continue;
+        for (OWLAxiom c : ont.getAxioms(AxiomType.OBJECT_PROPERTY_DOMAIN)) {
+            OWLObjectPropertyDomainAxiom ax = (OWLObjectPropertyDomainAxiom) c;
+            // TODO: if domain or range is a union, then run for each class
+            if (ax.getProperty().isAnonymous())
+                continue;
+            if (ax.getDomain().isAnonymous())
+                continue;
+
+            tx = cs.beginTx();
+            try {
                 Node rNode = linkObjectProperty(ax.getProperty().asOWLObjectProperty(), reasoner);
                 if (rNode != null)
                     rNode.createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY);
@@ -168,24 +176,34 @@ public class RegisterSchemaAction implements Action {
                         continue;
                     createObjectPropertyRelationship(iri, ax.getProperty().asOWLObjectProperty(), ax.getDomain().asOWLClass(), range.asOWLClass());
                 }
+                tx.success();
+            } catch (Exception e) {
+                logger.warn(e);
+            } finally {
+                tx.finish();
             }
+        }
 
-            for (OWLAxiom c : ont.getAxioms(AxiomType.DATA_PROPERTY_DOMAIN)) {
-                OWLDataPropertyDomainAxiom ax = (OWLDataPropertyDomainAxiom) c;
-                if (ax.getProperty().isAnonymous())
-                    continue;
-                if (ax.getDomain().isAnonymous())
-                    continue;
+        for (OWLAxiom c : ont.getAxioms(AxiomType.DATA_PROPERTY_DOMAIN)) {
+            OWLDataPropertyDomainAxiom ax = (OWLDataPropertyDomainAxiom) c;
+            if (ax.getProperty().isAnonymous())
+                continue;
+            if (ax.getDomain().isAnonymous())
+                continue;
+            tx = cs.beginTx();
+            try {
                 for (OWLDataRange range : ax.getProperty().getRanges(ont)) {
                     createDataProperty(iri, ax.getProperty().asOWLDataProperty(), ax.getDomain().asOWLClass(), range);
                 }
+                tx.success();
+            } catch (Exception e) {
+                logger.warn(e);
+            } finally {
+                tx.finish();
             }
-            tx.success();
-        } finally {
-            tx.finish();
-            // TODO handle error
         }
 
+        // TODO error handling
         Result r = new Result();
         r.success = true;
         r.message = "yeayayay";
@@ -496,6 +514,8 @@ public class RegisterSchemaAction implements Action {
                 ref.createRelationshipTo(ontRef, ClusterSpace.InternalRelTypes.ONTOLOGIES_REFERENCE);
                 tx.success();
                 return ontRef;
+            } catch (Exception e) {
+                logger.warn(e);
             } finally {
                 tx.finish();
             }
@@ -603,6 +623,8 @@ public class RegisterSchemaAction implements Action {
             // TODO set to column family location
             //domainNode.setProperty(property.getIRI().toString());
             tx.success();
+        } catch (Exception e) {
+            logger.warn(e);
         } finally {
             tx.finish();
         }
