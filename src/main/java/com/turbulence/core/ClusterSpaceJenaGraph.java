@@ -14,7 +14,6 @@ import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
 
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Expander;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
@@ -40,12 +39,22 @@ import com.hp.hpl.jena.util.iterator.NullIterator;
 import com.hp.hpl.jena.util.iterator.Map1;
 import com.hp.hpl.jena.util.iterator.Map1Iterator;
 import com.hp.hpl.jena.util.iterator.NiceIterator;
-import com.hp.hpl.jena.util.iterator.SingletonIterator;
 import com.hp.hpl.jena.query.QueryExecException;
 
 import com.hp.hpl.jena.util.IteratorCollection;
 
 import com.turbulence.core.ClusterSpace;
+
+import com.turbulence.util.AllColumnsIterator;
+import com.turbulence.util.ConceptsInstancesIterator;
+
+import me.prettyprint.cassandra.serializers.StringSerializer;
+
+import me.prettyprint.hector.api.beans.HColumn;
+
+import me.prettyprint.hector.api.factory.HFactory;
+
+import me.prettyprint.hector.api.query.SliceQuery;
 
 class ClusterSpaceJenaIterator extends NiceIterator<Triple> {
     private static final Log logger =
@@ -59,18 +68,18 @@ class ClusterSpaceJenaIterator extends NiceIterator<Triple> {
         internal = it;
     }
 
-	public boolean hasNext() {
-		return internal.hasNext();
-	}
+    public boolean hasNext() {
+        return internal.hasNext();
+    }
 
-	public Triple next() {
-	    org.neo4j.graphdb.Relationship rel = internal.next();
+    public Triple next() {
+        org.neo4j.graphdb.Relationship rel = internal.next();
 
-	    Node sub = Node.createURI((String)rel.getStartNode().getProperty("IRI", "bombaderror"));
+        Node sub = Node.createURI((String)rel.getStartNode().getProperty("IRI", "bombaderror"));
 
-	    Node pred;
-	    if (rel.hasProperty("IRI")) {
-	        pred = Node.createURI((String) rel.getProperty("IRI"));
+        Node pred;
+        if (rel.hasProperty("IRI")) {
+            pred = Node.createURI((String) rel.getProperty("IRI"));
         }
         else {
             RelationshipType type = rel.getType();
@@ -87,7 +96,7 @@ class ClusterSpaceJenaIterator extends NiceIterator<Triple> {
 
         Node obj = Node.createURI((String)rel.getEndNode().getProperty("IRI", "bombaderror"));
         return Triple.create(sub, pred, obj);
-	}
+    }
 }
 
 public class ClusterSpaceJenaGraph extends GraphBase {
@@ -105,30 +114,8 @@ public class ClusterSpaceJenaGraph extends GraphBase {
     }
 
     private org.neo4j.graphdb.Node getClass(final String classIRI) {
-        // find the object in the cluster space
-        // TODO: abstract this
-        String ontologyIRI;
-        if (classIRI.lastIndexOf('#') != -1) {
-            ontologyIRI = classIRI.substring(0, classIRI.lastIndexOf('#'));
-        }
-        else {
-            ontologyIRI = classIRI.substring(0, classIRI.lastIndexOf('/')+1);
-        }
-        Index<org.neo4j.graphdb.Node> ontologyIndex = cs.index().forNodes("ontologyIndex");
-        org.neo4j.graphdb.Node ont = ontologyIndex.get("KNOWN_ONTOLOGY", ontologyIRI).getSingle();
-        if (ont == null)
-            return null;
-        // get the class
-        Traverser trav = ont.traverse(Traverser.Order.BREADTH_FIRST, StopEvaluator.DEPTH_ONE, new ReturnableEvaluator() {
-            public boolean isReturnableNode(TraversalPosition pos) {
-                return ((String)pos.currentNode().getProperty("IRI")).equals(classIRI.toString());
-            }
-        }, ClusterSpace.InternalRelTypes.SOURCE_ONTOLOGY, Direction.INCOMING);
-
-        if (trav.iterator().hasNext())
-            return trav.iterator().next();
-
-        return null;
+        Index<org.neo4j.graphdb.Node> conceptIndex = cs.index().forNodes("conceptIndex");
+        return conceptIndex.get("CONCEPT", classIRI).getSingle();
     }
 
     private org.neo4j.graphdb.Node getObjectProperty(final String objectPropertyIRI) {
@@ -238,6 +225,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                                     .evaluator(Evaluators.all())
                                     .relationships(ClusterSpace.InternalRelTypes.ROOT);
 
+
         // this evaluator allows us to traverse from the reference node,
         // and follow 'ROOT' relationships, but not include the relationships
         // (and the reference node) themselves in the results
@@ -299,7 +287,17 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             Triple t = Triple.create(Node.createURI(obj.getURI()), pred, obj);
 
             trav = trav.relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS);
-            return new ClusterSpaceJenaIterator(trav.traverse(startNode).relationships().iterator()).andThen(new SingletonIterator<Triple>(t));
+            //return new ClusterSpaceJenaIterator(trav.traverse(startNode).relationships().iterator()).andThen(new SingletonIterator<Triple>(t));
+            for (org.neo4j.graphdb.Node n : trav.traverse(startNode).nodes()) {
+                String classIRI = (String)n.getProperty("IRI");
+
+                SliceQuery<String, String, String> query = HFactory.createSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+                query.setKey(classIRI);
+                query.setColumnFamily("Concepts");
+
+                Iterator<HColumn<String, String>> it = new AllColumnsIterator<String, String>(query);
+                return new ConceptsInstancesIterator(classIRI, it);
+            }
         }
         else if (pred.isURI()
             && pred.getURI().equals("http://www.w3.org/2000/01/rdf-schema#subClassOf")) {
