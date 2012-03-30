@@ -80,13 +80,9 @@ public class QueryAction implements Action {
                 }
                 logger.warn("RESULT set size " + rowKeys.size());
 
+                // TODO: you might have to look at the concepts family also
                 for (String rowKey : rowKeys) {
-                    SliceQuery<String, String, String> query = HFactory.createSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
-                    query.setKey(rowKey);
-                    query.setColumnFamily("ConceptsInstancesData");
-                    Iterator<HColumn<String, String>> it = new AllColumnsIterator<String, String>(query);
-                    while (it.hasNext())
-                        out.write(it.next().getValue().getBytes());
+                    out.write(TurbulenceDriver.getInstanceDataTemplate().querySingleColumn(rowKey, "data", StringSerializer.get()).getValue().getBytes());
                 }
             }
         };

@@ -304,7 +304,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         }
         else if (pred.isURI()) { /* custom relationship */
             final Set<String> iris = IteratorCollection.iteratorToSet(objectPropertyCover(pred.getURI()));
-            logger.warn("IRIs " + iris);
             trav = trav.relationships(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP, relationshipDirection);
             trav = trav.evaluator(new Evaluator() {
                 public Evaluation evaluate(Path path) {
