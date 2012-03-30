@@ -1,6 +1,7 @@
 package com.turbulence.core;
 
 import java.util.Arrays;
+import java.util.HashMap;
 
 import java.util.logging.Logger;
 
@@ -10,6 +11,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+
+import java.util.Map;
 
 import org.json.*;
 
@@ -58,6 +61,7 @@ public class TurbulenceDriver {
     private static ColumnFamilyTemplate<String, String> conceptsTemplate;
     private static ColumnFamilyTemplate<String, String> conceptsInstanceDataTemplate;
     private static SuperCfTemplate<String, String, String> triplesTemplate;
+    private static ColumnFamilyTemplate<String, String> instanceDataTemplate;
 
     public static void initialize(Config config) {
         logger = Logger.getLogger("com.turbulence.core.TurbulenceDriver");
@@ -88,11 +92,19 @@ public class TurbulenceDriver {
 
         ColumnFamilyDefinition triplesCf = HFactory.createColumnFamilyDefinition("Turbulence", "Triples", ComparatorType.UTF8TYPE);
         triplesCf.setColumnType(ColumnType.SUPER);
-        conceptsInstanceDataCf.setKeyValidationClass("UTF8Type");
+        triplesCf.setKeyValidationClass("UTF8Type");
+        Map<String, String> compressionOptions = new HashMap<String, String>();
+        compressionOptions.put("sstable_compression", "SnappyCompressor");
+        compressionOptions.put("chunk_length_kb", "64");
+        triplesCf.setCompressionOptions(compressionOptions);
+
+        ColumnFamilyDefinition instanceDataCf = HFactory.createColumnFamilyDefinition("Turbulence", "InstanceData", ComparatorType.UTF8TYPE);
+        instanceDataCf.setKeyValidationClass("UTF8Type");
+        instanceDataCf.setCompressionOptions(compressionOptions);
 
         KeyspaceDefinition kspd = cassandra.describeKeyspace("Turbulence");
         if (kspd == null) {
-            KeyspaceDefinition newKeyspace = HFactory.createKeyspaceDefinition("Turbulence", ThriftKsDef.DEF_STRATEGY_CLASS, 1 /*TODO replication factor*/, Arrays.asList(conceptsCf, conceptsInstanceDataCf, triplesCf));
+            KeyspaceDefinition newKeyspace = HFactory.createKeyspaceDefinition("Turbulence", ThriftKsDef.DEF_STRATEGY_CLASS, 1 /*TODO replication factor*/, Arrays.asList(conceptsCf, conceptsInstanceDataCf, triplesCf, instanceDataCf));
             cassandra.addKeyspace(newKeyspace, true);
         }
         // FIXME: in a cluster we don't want this
@@ -104,6 +116,7 @@ public class TurbulenceDriver {
         conceptsTemplate = new ThriftColumnFamilyTemplate<String, String>(keyspace, "Concepts", StringSerializer.get(), StringSerializer.get());
         conceptsInstanceDataTemplate = new ThriftColumnFamilyTemplate<String, String>(keyspace, "ConceptsInstanceData", StringSerializer.get(), StringSerializer.get());
         triplesTemplate = new ThriftSuperCfTemplate<String, String, String>(keyspace, "Triples", StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+        instanceDataTemplate = new ThriftColumnFamilyTemplate<String, String>(keyspace, "InstanceData", StringSerializer.get(), StringSerializer.get());
 
         threadPool = Executors.newFixedThreadPool(20);
     }
@@ -154,5 +167,9 @@ public class TurbulenceDriver {
 
     public static SuperCfTemplate<String, String, String> getTriplesTemplate() {
         return triplesTemplate;
+    }
+
+    public static ColumnFamilyTemplate<String, String> getInstanceDataTemplate() {
+        return instanceDataTemplate;
     }
 }

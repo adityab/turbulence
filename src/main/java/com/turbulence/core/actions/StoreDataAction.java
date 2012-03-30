@@ -44,6 +44,8 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
     ColumnFamilyTemplate<String, String> conceptsTemplate;
     ColumnFamilyTemplate<String, String> conceptsInstanceDataTemplate;
     SuperCfTemplate<String, String, String> triplesTemplate;
+    ColumnFamilyTemplate<String, String> instanceDataTemplate;
+
     protected StoreDataAction(InputStream in) {
         input = in;
         rdfParser = new ARP();
@@ -56,6 +58,7 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
         conceptsTemplate = TurbulenceDriver.getConceptsTemplate();
         conceptsInstanceDataTemplate = TurbulenceDriver.getConceptsInstanceDataTemplate();
         triplesTemplate = TurbulenceDriver.getTriplesTemplate();
+        instanceDataTemplate = TurbulenceDriver.getInstanceDataTemplate();
 
         currentModel = ModelFactory.createDefaultModel();
     }
@@ -150,17 +153,29 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
         StringWriter w = new StringWriter();
         RDFWriter writer = currentModel.getWriter();
         writer.setProperty("allowBadURIs", true);
+        writer.
         writer.write(currentModel, w, null);
         //logger.warn("Will save dump " + w.toString());
         //logger.warn("to row " + currentSubject.getPropertyResourceValue(RDF.type).getURI() + " column " + currentSubject.getURI());
-        ColumnFamilyUpdater<String, String> updater = conceptsInstanceDataTemplate.createUpdater(currentSubject.getPropertyResourceValue(RDF.type).getURI());
+        ColumnFamilyUpdater<String, String> instanceDataUpdater = instanceDataTemplate.createUpdater(currentSubject.isAnon() ? currentSubject.getId().toString() : currentSubject.getURI());
+        instanceDataUpdater.setString("data", w.toString());
 
-        if (currentSubject.isAnon())
-            updater.setString(currentSubject.getId().toString(), w.toString());
-        else
-            updater.setString(currentSubject.getURI(), w.toString());
         try {
-            conceptsInstanceDataTemplate.update(updater);
+            instanceDataTemplate.update(instanceDataUpdater);
+        } catch (HectorException e) {
+            throw new UnhandledException(e);
+        }
+
+        ColumnFamilyUpdater<String, String> conceptsUpdater = conceptsInstanceDataTemplate.createUpdater(currentSubject.getPropertyResourceValue(RDF.type).getURI());
+
+        if (currentSubject.isAnon()) {
+            conceptsUpdater.setString(currentSubject.getId().toString(), w.toString());
+        }
+        else {
+            conceptsUpdater.setString(currentSubject.getURI(), w.toString());
+        }
+        try {
+            conceptsInstanceDataTemplate.update(conceptsUpdater);
         } catch (HectorException e) {
             throw new UnhandledException(e);
         }
