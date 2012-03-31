@@ -28,15 +28,9 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.turbulence.core.ClusterSpaceJenaGraph;
 import com.turbulence.core.TurbulenceDriver;
 
-import com.turbulence.util.AllColumnsIterator;
-
 import me.prettyprint.cassandra.serializers.StringSerializer;
 
 import me.prettyprint.hector.api.beans.HColumn;
-
-import me.prettyprint.hector.api.factory.HFactory;
-
-import me.prettyprint.hector.api.query.SliceQuery;
 
 public class QueryAction implements Action {
     private static final Log logger = LogFactory.getLog(QueryAction.class);
@@ -75,14 +69,20 @@ public class QueryAction implements Action {
                     QuerySolution row = resultSet.next();
 
                     for (String var : resultSet.getResultVars()) {
-                        rowKeys.add(row.getResource(var).getURI());
+                        try {
+                            rowKeys.add(row.getResource(var).getURI());
+                        } catch (ClassCastException e) {
+                            rowKeys.add(row.getLiteral(var).getString());
+                        }
                     }
                 }
                 logger.warn("RESULT set size " + rowKeys.size());
 
-                // TODO: you might have to look at the concepts family also
+                // TODO: batch this
                 for (String rowKey : rowKeys) {
-                    out.write(TurbulenceDriver.getInstanceDataTemplate().querySingleColumn(rowKey, "data", StringSerializer.get()).getValue().getBytes());
+                    HColumn<String, String> col = TurbulenceDriver.getInstanceDataTemplate().querySingleColumn(rowKey, "data", StringSerializer.get());
+                    if (col != null && col.getValue() != null)
+                        out.write(col.getValue().getBytes());
                 }
             }
         };
