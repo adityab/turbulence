@@ -6,6 +6,10 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+
+import org.apache.log4j.lf5.LogLevel;
+import org.apache.log4j.Logger;
 
 import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory;
 import com.sun.jersey.api.core.PackagesResourceConfig;
@@ -55,6 +59,7 @@ public class Turbulence {
 
     public static void main(String[] args) {
         BasicConfigurator.configure();
+        Logger.getRootLogger().setLevel(Level.WARN);
         // TODO: read the config
         // find config file by parsing options
         // pass config parser instance to HW
