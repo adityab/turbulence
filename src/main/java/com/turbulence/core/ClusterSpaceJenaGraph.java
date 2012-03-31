@@ -1,7 +1,5 @@
 package com.turbulence.core;
 
-import java.nio.ByteBuffer;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -54,10 +52,7 @@ import com.turbulence.util.ObjectsFilterKeepIterator;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
 
-import me.prettyprint.cassandra.service.template.SuperCfResult;
-
 import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.beans.HSuperColumn;
 
 import me.prettyprint.hector.api.factory.HFactory;
 

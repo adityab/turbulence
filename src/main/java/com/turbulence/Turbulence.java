@@ -8,7 +8,6 @@ import java.util.concurrent.SynchronousQueue;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 
-import org.apache.log4j.lf5.LogLevel;
 import org.apache.log4j.Logger;
 
 import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory;
