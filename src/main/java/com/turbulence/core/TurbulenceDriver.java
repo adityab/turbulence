@@ -59,9 +59,9 @@ public class TurbulenceDriver {
     private static Cluster cassandra;
     private static Keyspace keyspace;
     private static ColumnFamilyTemplate<String, String> conceptsTemplate;
-    private static ColumnFamilyTemplate<String, String> conceptsInstanceDataTemplate;
-    private static SuperCfTemplate<String, String, String> triplesTemplate;
     private static ColumnFamilyTemplate<String, String> instanceDataTemplate;
+    private static SuperCfTemplate<String, String, String> spoDataTemplate;
+    private static SuperCfTemplate<String, String, String> opsDataTemplate;
 
     public static void initialize(Config config) {
         logger = Logger.getLogger("com.turbulence.core.TurbulenceDriver");
@@ -87,24 +87,27 @@ public class TurbulenceDriver {
                 ComparatorType.UTF8TYPE);
         conceptsCf.setKeyValidationClass("UTF8Type");
 
-        ColumnFamilyDefinition conceptsInstanceDataCf = HFactory.createColumnFamilyDefinition("Turbulence", "ConceptsInstanceData", ComparatorType.UTF8TYPE);
-        conceptsInstanceDataCf.setKeyValidationClass("UTF8Type");
-
-        ColumnFamilyDefinition triplesCf = HFactory.createColumnFamilyDefinition("Turbulence", "Triples", ComparatorType.UTF8TYPE);
-        triplesCf.setColumnType(ColumnType.SUPER);
-        triplesCf.setKeyValidationClass("UTF8Type");
         Map<String, String> compressionOptions = new HashMap<String, String>();
         compressionOptions.put("sstable_compression", "SnappyCompressor");
         compressionOptions.put("chunk_length_kb", "64");
-        triplesCf.setCompressionOptions(compressionOptions);
 
         ColumnFamilyDefinition instanceDataCf = HFactory.createColumnFamilyDefinition("Turbulence", "InstanceData", ComparatorType.UTF8TYPE);
         instanceDataCf.setKeyValidationClass("UTF8Type");
         instanceDataCf.setCompressionOptions(compressionOptions);
 
+        ColumnFamilyDefinition spoDataCf = HFactory.createColumnFamilyDefinition("Turbulence", "SPOData", ComparatorType.UTF8TYPE);
+        spoDataCf.setColumnType(ColumnType.SUPER);
+        spoDataCf.setKeyValidationClass("UTF8Type");
+        spoDataCf.setCompressionOptions(compressionOptions);
+
+        ColumnFamilyDefinition opsDataCf = HFactory.createColumnFamilyDefinition("Turbulence", "OPSData", ComparatorType.UTF8TYPE);
+        opsDataCf.setColumnType(ColumnType.SUPER);
+        opsDataCf.setKeyValidationClass("UTF8Type");
+        opsDataCf.setCompressionOptions(compressionOptions);
+
         KeyspaceDefinition kspd = cassandra.describeKeyspace("Turbulence");
         if (kspd == null) {
-            KeyspaceDefinition newKeyspace = HFactory.createKeyspaceDefinition("Turbulence", ThriftKsDef.DEF_STRATEGY_CLASS, 1 /*TODO replication factor*/, Arrays.asList(conceptsCf, conceptsInstanceDataCf, triplesCf, instanceDataCf));
+            KeyspaceDefinition newKeyspace = HFactory.createKeyspaceDefinition("Turbulence", ThriftKsDef.DEF_STRATEGY_CLASS, 1 /*TODO replication factor*/, Arrays.asList(conceptsCf, instanceDataCf, spoDataCf, opsDataCf));
             cassandra.addKeyspace(newKeyspace, true);
         }
         // FIXME: in a cluster we don't want this
@@ -114,9 +117,9 @@ public class TurbulenceDriver {
         keyspace = HFactory.createKeyspace("Turbulence", cassandra, lvl);
 
         conceptsTemplate = new ThriftColumnFamilyTemplate<String, String>(keyspace, "Concepts", StringSerializer.get(), StringSerializer.get());
-        conceptsInstanceDataTemplate = new ThriftColumnFamilyTemplate<String, String>(keyspace, "ConceptsInstanceData", StringSerializer.get(), StringSerializer.get());
-        triplesTemplate = new ThriftSuperCfTemplate<String, String, String>(keyspace, "Triples", StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
         instanceDataTemplate = new ThriftColumnFamilyTemplate<String, String>(keyspace, "InstanceData", StringSerializer.get(), StringSerializer.get());
+        spoDataTemplate = new ThriftSuperCfTemplate<String, String, String>(keyspace, "SPOData", StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+        opsDataTemplate = new ThriftSuperCfTemplate<String, String, String>(keyspace, "OPSData", StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
 
         threadPool = Executors.newFixedThreadPool(20);
     }
@@ -161,15 +164,15 @@ public class TurbulenceDriver {
         return conceptsTemplate;
     }
 
-    public static ColumnFamilyTemplate<String, String> getConceptsInstanceDataTemplate() {
-        return conceptsInstanceDataTemplate;
-    }
-
-    public static SuperCfTemplate<String, String, String> getTriplesTemplate() {
-        return triplesTemplate;
+    public static SuperCfTemplate<String, String, String> getSPODataTemplate() {
+        return spoDataTemplate;
     }
 
     public static ColumnFamilyTemplate<String, String> getInstanceDataTemplate() {
         return instanceDataTemplate;
+    }
+
+    public static SuperCfTemplate<String, String, String> getOPSDataTemplate() {
+        return opsDataTemplate;
     }
 }

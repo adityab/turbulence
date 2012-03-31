@@ -42,9 +42,9 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
     Resource currentSubject = null;
 
     ColumnFamilyTemplate<String, String> conceptsTemplate;
-    ColumnFamilyTemplate<String, String> conceptsInstanceDataTemplate;
-    SuperCfTemplate<String, String, String> triplesTemplate;
     ColumnFamilyTemplate<String, String> instanceDataTemplate;
+    SuperCfTemplate<String, String, String> spoTemplate;
+    SuperCfTemplate<String, String, String> opsTemplate;
 
     protected StoreDataAction(InputStream in) {
         input = in;
@@ -56,9 +56,9 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
         //rdfParser.getOptions().setLaxErrorMode();
 
         conceptsTemplate = TurbulenceDriver.getConceptsTemplate();
-        conceptsInstanceDataTemplate = TurbulenceDriver.getConceptsInstanceDataTemplate();
-        triplesTemplate = TurbulenceDriver.getTriplesTemplate();
         instanceDataTemplate = TurbulenceDriver.getInstanceDataTemplate();
+        spoTemplate = TurbulenceDriver.getSPODataTemplate();
+        opsTemplate = TurbulenceDriver.getOPSDataTemplate();
 
         currentModel = ModelFactory.createDefaultModel();
     }
@@ -122,8 +122,7 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
                 throw new UnhandledException(e);
             }
         }
-        saveTriple(subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI(), predicate.getURI(), object.isAnonymous() ? object.getAnonymousID() : object.getURI());
-        //logger.warn("statementAResource: " + subject + " " + predicate + " " + object);
+        saveTriple(subject, predicate, object);
     }
 
     public void statement(AResource subject, AResource predicate, ALiteral object) {
@@ -132,16 +131,41 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
             resetRDFInstance(subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI());
         }
         currentSubject.addProperty(currentModel.createProperty(predicate.getURI()), object.toString());
-        saveTriple(subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI(), predicate.getURI(), object.toString());
-        //logger.warn("statementALiteral: " + subject + " " + predicate + " " + object);
+        saveTriple(subject, predicate, object);
     }
 
-    private void saveTriple(String subject, String predicate, String object) {
-        //logger.warn("Saving triple with row key " + subject + " SCol: " + predicate + " colName: " + DigestUtils.md5Hex(object) + " colValue: " + object);
-        SuperCfUpdater<String, String, String> updater = triplesTemplate.createUpdater(subject, predicate);
-        updater.setString(DigestUtils.md5Hex(object), object);
+    private void saveTriple(AResource subject, AResource predicate, AResource object) {
+        saveTriple(subject, predicate, object.isAnonymous() ? object.getAnonymousID() : object.getURI(), object.isAnonymous() ? "ANON" : "URI");
+    }
+
+    private void saveTriple(AResource subject, AResource predicate, ALiteral object) {
+        saveTriple(subject, predicate, object.toString(),
+                object.getDatatypeURI() == null ? "LITERAL" : "LITERAL|" + object.getDatatypeURI());
+    }
+
+    private void saveTriple(AResource subject, AResource predicate, String object, String objectType) {
+        String rowKey = subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI();
+        SuperCfUpdater<String, String, String> spoUpdater = spoTemplate.createUpdater(rowKey, predicate.getURI());
+        spoUpdater.setString(objectType + "|" + DigestUtils.md5Hex(object), object);
         try {
-            triplesTemplate.update(updater);
+            spoTemplate.update(spoUpdater);
+        } catch (HectorException e) {
+            throw new UnhandledException(e);
+        }
+
+        if (!objectType.equals("URI"))
+            return;
+
+        // no point in storing inverse type relationships
+        if (predicate.getURI().equals(RDF.type.getURI()))
+            return;
+
+        SuperCfUpdater<String, String, String> opsUpdater = opsTemplate.createUpdater(object, predicate.getURI());
+
+        String value = subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI();
+        opsUpdater.setString("URI|" + DigestUtils.md5Hex(value), value);
+        try {
+            opsTemplate.update(opsUpdater);
         } catch (HectorException e) {
             throw new UnhandledException(e);
         }
@@ -153,7 +177,6 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
         StringWriter w = new StringWriter();
         RDFWriter writer = currentModel.getWriter();
         writer.setProperty("allowBadURIs", true);
-        writer.
         writer.write(currentModel, w, null);
         //logger.warn("Will save dump " + w.toString());
         //logger.warn("to row " + currentSubject.getPropertyResourceValue(RDF.type).getURI() + " column " + currentSubject.getURI());
@@ -162,20 +185,6 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
 
         try {
             instanceDataTemplate.update(instanceDataUpdater);
-        } catch (HectorException e) {
-            throw new UnhandledException(e);
-        }
-
-        ColumnFamilyUpdater<String, String> conceptsUpdater = conceptsInstanceDataTemplate.createUpdater(currentSubject.getPropertyResourceValue(RDF.type).getURI());
-
-        if (currentSubject.isAnon()) {
-            conceptsUpdater.setString(currentSubject.getId().toString(), w.toString());
-        }
-        else {
-            conceptsUpdater.setString(currentSubject.getURI(), w.toString());
-        }
-        try {
-            conceptsInstanceDataTemplate.update(conceptsUpdater);
         } catch (HectorException e) {
             throw new UnhandledException(e);
         }
