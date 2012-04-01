@@ -51,6 +51,10 @@ public class AllColumnsIterator<N, V> implements Iterator<HColumn<N, V>> {
             List<HColumn<N, V>> columns = slice.getColumns();
             int origSize = columns.size();
 
+            if (origSize == 0) {
+                return false;
+            }
+
             if (origSize >= count)
                 start = columns.remove(columns.size()-1).getName();
 
