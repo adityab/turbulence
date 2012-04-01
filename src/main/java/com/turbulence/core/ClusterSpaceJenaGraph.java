@@ -380,8 +380,59 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 throw new UnsupportedOperationException();
             }
             else if (obj.isURI() && (objectClass = getClass(obj.getURI())) != null) {
-                // TODO handle entire cover in types check
-                return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
+                // TODO handle equivalent object properties coming in also
+                final String objectPropertyIRI = pred.getURI();
+                org.neo4j.graphdb.Node domain = isObjectPropertyRange(objectPropertyIRI, objectClass);
+                if (domain == null)
+                    return new NullIterator<Triple>();
+                logger.warn("Domain " + domain.getProperty("IRI"));
+
+                // for each class in cover of domain
+                    // for every instance of the class
+                        // if instance -> pred -> o  and o.type in object cover
+                            // emit the instance -> pred -> o pair
+                final Set<String> rangeCoverIRIs = IteratorCollection.iteratorToSet(new Map1Iterator<org.neo4j.graphdb.Node, String>(new Map1<org.neo4j.graphdb.Node, String>() {
+                    public String map1(org.neo4j.graphdb.Node from) {
+                        return (String) from.getProperty("IRI");
+                    }
+                }, classCover(obj.getURI()).iterator()));
+                logger.warn("Range cover " + rangeCoverIRIs);
+
+                Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
+                    public boolean accept(HColumn<String, String> o) {
+                        SubSliceQuery<String, String, String, String> query
+                            = HFactory.createSubSliceQuery(TurbulenceDriver.getKeyspace(),
+                                    StringSerializer.get(), StringSerializer.get(),
+                                    StringSerializer.get(), StringSerializer.get());
+                        query.setKey(o.getValue());
+                        query.setSuperColumn(RDF.type.getURI());
+                        query.setColumnFamily("SPOData");
+                        AllSubColumnsIterator<String, String> it = new AllSubColumnsIterator<String, String>(query);
+                        while (it.hasNext()) {
+                            HColumn<String, String> col = it.next();
+                            if (rangeCoverIRIs.contains(col.getValue())) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                };
+
+
+                ExtendedIterator<Triple> result = NullIterator.instance();
+                for (org.neo4j.graphdb.Node domainNode : classCover((String)domain.getProperty("IRI"))) {
+                    SliceQuery<String, String, String> query = HFactory.createSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+                    query.setColumnFamily("Concepts");
+                    query.setKey((String)domainNode.getProperty("IRI"));
+                    Iterator<HColumn<String, String>> instances = new AllColumnsIterator<String, String>(query);
+
+                    while (instances.hasNext()) {
+                        String instance = instances.next().getValue();
+                        InstancesFilterKeepIterator objects = new InstancesFilterKeepIterator(instance, pred.getURI(), filter, "SPOData");
+                        result = result.andThen(objects);
+                    }
+                }
+                return result;
             }
             else if (obj.isURI()) { // could be an instance
                 Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
@@ -489,41 +540,5 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         else {
             throw new QueryExecException("Subject is of unknown type");
         }
-        /*// if object is ANY, return concepts that have a relationship to*/
-        //// the subject
-        //if (obj.equals(Node.ANY)) {
-        //}
-        //else {
-        //// if it is a concept, return all the instances for *all* the
-        //// cover of subjects which have a ObjectProperty to obj
-        //if (obj.isURI() && (Node objClass = getClass(obj.getURI()))) {
-        //}
-        //else if (obj.isURI()) { // it is a instance, return all subjects which have the relationship pred to object instance obj
-        //}
-        //else if (obj.isLiteral()) { // it is a literal, do a data property comparison, all subjects which have the relationship and the object instance matches
-        //}
-        //}
-        //final Set<String> iris = IteratorCollection.iteratorToSet(objectPropertyCover(pred.getURI()));
-        //trav = trav.relationships(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP, relationshipDirection);
-        //trav = trav.evaluator(new Evaluator() {
-        //public Evaluation evaluate(Path path) {
-        //if (path.lastRelationship() != null
-        //&& path.lastRelationship().getType().equals(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP)
-        //&& iris.contains((String)path.lastRelationship().getProperty("IRI"))) {
-        //return Evaluation.INCLUDE_AND_PRUNE;
-        //}
-
-        //return Evaluation.EXCLUDE_AND_CONTINUE;
-        //}
-        //});
-
-        //ExtendedIterator<Triple> result = new ClusterSpaceJenaIterator(trav.traverse(startNode).relationships().iterator());
-        //final Iterable<org.neo4j.graphdb.Node> superClasses = superclasses(startNode);
-        //// try all superclasses also since the relationship
-        //// domain might actually be a superclass
-        //for (org.neo4j.graphdb.Node n : superClasses) {
-        //result = result.andThen(new ClusterSpaceJenaIterator(trav.traverse(n).relationships().iterator()));
-        //}
-        /*return result;*/
     }
 }
