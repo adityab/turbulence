@@ -568,7 +568,21 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 return new Map1Iterator(tripleSwap, it);
             }
             else if (obj.isLiteral()) {
-                return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
+                final String predicateURI = pred.getURI();
+                final String objectValue = obj.getLiteral().toString();
+                final Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
+                    public boolean accept(HColumn<String, String> o) {
+                        return o.getValue().equals(objectValue);
+                    }
+                };
+                Map1<HColumn<String, String>, Iterator<Triple>> map = new Map1<HColumn<String, String>, Iterator<Triple>>() {
+                    public Iterator<Triple> map1(HColumn<String, String> column) {
+                        return new InstancesFilterKeepIterator(column.getValue(), predicateURI, filter, "SPOData");
+                    }
+                };
+                Map1Iterator<HColumn<String, String>, Iterator<Triple>> instanceTriples = new Map1Iterator<HColumn<String, String>, Iterator<Triple>>(map, instances);
+
+                return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
             }
             else {
                 throw new QueryExecException("Object is of unknown type");
