@@ -483,15 +483,44 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
             }
             else if (obj.isURI() && (objectClass = getClass(obj.getURI())) != null) {
-                // TODO deal with cover of objectClass
-                final String objectTypeURI = obj.getURI();
+                // TODO handle equivalent object properties coming in also
+                final String objectPropertyIRI = pred.getURI();
+                org.neo4j.graphdb.Node domain = isObjectPropertyRange(objectPropertyIRI, objectClass);
+                if (domain == null)
+                    return new NullIterator<Triple>();
+                logger.warn("Domain " + domain.getProperty("IRI"));
+
+                // for each class in cover of domain
+                    // for every instance of the class
+                        // if instance -> pred -> o  and o.type in object cover
+                            // emit the instance -> pred -> o pair
+                final Set<String> rangeCoverIRIs = IteratorCollection.iteratorToSet(new Map1Iterator<org.neo4j.graphdb.Node, String>(new Map1<org.neo4j.graphdb.Node, String>() {
+                    public String map1(org.neo4j.graphdb.Node from) {
+                        return (String) from.getProperty("IRI");
+                    }
+                }, classCover(obj.getURI()).iterator()));
+                logger.warn("Range cover " + rangeCoverIRIs);
+
                 final Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
                     public boolean accept(HColumn<String, String> o) {
-                        // check if o.type is objectTypeURI
-                        HColumn<String, String> type = TurbulenceDriver.getSPODataTemplate().querySingleSubColumn(o.getValue(), RDF.type.getURI(), "URI|" + DigestUtils.md5Hex(objectTypeURI), StringSerializer.get());
-                        return type != null ? type.getValue().equals(objectTypeURI) : false;
+                        SubSliceQuery<String, String, String, String> query
+                            = HFactory.createSubSliceQuery(TurbulenceDriver.getKeyspace(),
+                                    StringSerializer.get(), StringSerializer.get(),
+                                    StringSerializer.get(), StringSerializer.get());
+                        query.setKey(o.getValue());
+                        query.setSuperColumn(RDF.type.getURI());
+                        query.setColumnFamily("SPOData");
+                        AllSubColumnsIterator<String, String> it = new AllSubColumnsIterator<String, String>(query);
+                        while (it.hasNext()) {
+                            HColumn<String, String> col = it.next();
+                            if (rangeCoverIRIs.contains(col.getValue())) {
+                                return true;
+                            }
+                        }
+                        return false;
                     }
                 };
+
                 final String predicateURI = pred.getURI();
                 Map1<HColumn<String, String>, Iterator<Triple>> map = new Map1<HColumn<String, String>, Iterator<Triple>>() {
                     public Iterator<Triple> map1(HColumn<String, String> column) {
