@@ -483,23 +483,24 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
             }
             else if (obj.isURI() && (objectClass = getClass(obj.getURI())) != null) {
-                // TODO handle entire cover in types check
-                // TODO abstract away and make iterable
-                ExtendedIterator<Triple> it = new NiceIterator<Triple>();
+                // TODO deal with cover of objectClass
                 final String objectTypeURI = obj.getURI();
-                Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
+                final Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
                     public boolean accept(HColumn<String, String> o) {
                         // check if o.type is objectTypeURI
                         HColumn<String, String> type = TurbulenceDriver.getSPODataTemplate().querySingleSubColumn(o.getValue(), RDF.type.getURI(), "URI|" + DigestUtils.md5Hex(objectTypeURI), StringSerializer.get());
                         return type != null ? type.getValue().equals(objectTypeURI) : false;
                     }
                 };
+                final String predicateURI = pred.getURI();
+                Map1<HColumn<String, String>, Iterator<Triple>> map = new Map1<HColumn<String, String>, Iterator<Triple>>() {
+                    public Iterator<Triple> map1(HColumn<String, String> column) {
+                        return new InstancesFilterKeepIterator(column.getValue(), predicateURI, filter, "SPOData");
+                    }
+                };
+                Map1Iterator<HColumn<String, String>, Iterator<Triple>> instanceTriples = new Map1Iterator<HColumn<String, String>, Iterator<Triple>>(map, instances);
 
-                while (instances.hasNext()) {
-                    HColumn<String, String> instance = instances.next();
-                    it = it.andThen(new InstancesFilterKeepIterator(instance.getValue(), pred.getURI(), filter, "SPOData"));
-                }
-                return it;
+                return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
             }
             else if (obj.isURI()) {
                 return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
