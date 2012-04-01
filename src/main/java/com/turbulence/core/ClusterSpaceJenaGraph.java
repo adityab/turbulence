@@ -532,7 +532,40 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
             }
             else if (obj.isURI()) {
-                return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
+                final Set<String> domainIRIs = IteratorCollection.iteratorToSet(new Map1Iterator<org.neo4j.graphdb.Node, String>(new Map1<org.neo4j.graphdb.Node, String>() {
+                    public String map1(org.neo4j.graphdb.Node from) {
+                        return (String) from.getProperty("IRI");
+                    }
+                }, classCover(sub.getURI()).iterator()));
+
+                final Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
+                    public boolean accept(HColumn<String, String> o) {
+                        SubSliceQuery<String, String, String, String> query
+                            = HFactory.createSubSliceQuery(TurbulenceDriver.getKeyspace(),
+                                    StringSerializer.get(), StringSerializer.get(),
+                                    StringSerializer.get(), StringSerializer.get());
+                        query.setKey(o.getValue());
+                        query.setSuperColumn(RDF.type.getURI());
+                        query.setColumnFamily("SPOData");
+                        AllSubColumnsIterator<String, String> it = new AllSubColumnsIterator<String, String>(query);
+                        while (it.hasNext()) {
+                            HColumn<String, String> col = it.next();
+                            if (domainIRIs.contains(col.getValue())) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                };
+
+                // since we need to invert the OPS triple to SPO
+                Map1<Triple, Triple> tripleSwap = new Map1<Triple, Triple>() {
+                    public Triple map1(Triple from) {
+                        return Triple.create(from.getObject(), from.getPredicate(), from.getSubject());
+                    }
+                };
+                InstancesFilterKeepIterator it = new InstancesFilterKeepIterator(obj.getURI(), pred.getURI(), filter, "OPSData");
+                return new Map1Iterator(tripleSwap, it);
             }
             else if (obj.isLiteral()) {
                 return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
