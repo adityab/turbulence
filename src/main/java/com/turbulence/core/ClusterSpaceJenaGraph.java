@@ -229,9 +229,9 @@ public class ClusterSpaceJenaGraph extends GraphBase {
 
     protected ExtendedIterator<Triple> graphBaseFind(TripleMatch tm) {
         Triple triple = tm.asTriple();
-        Node sub  = triple.getSubject();
-        Node pred = triple.getPredicate();
-        Node obj  = triple.getObject();
+        final Node sub  = triple.getSubject();
+        final Node pred = triple.getPredicate();
+        final Node obj  = triple.getObject();
         //logger.warn("graphBaseFind: " + sub + " -- " + pred + " -- " + obj);
 
         TraversalDescription trav = Traversal.description()
@@ -274,6 +274,28 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             return handleCustomRelationship(sub, pred, obj);
         }
         else if (pred.equals(Node.ANY)) {
+            if (sub.equals(Node.ANY) && obj.equals(Node.ANY)) {
+                throw new QueryExecException("predicate ANY cannot have both subject and object as ANY");
+            }
+            if (!(sub.equals(Node.ANY) || obj.equals(Node.ANY))) {
+                // TODO handle s ?p o
+            }
+            else if (sub.isURI() && getClass(sub.getURI()) != null) {
+                // TODO each call to handleCustomRelationshipSubjectConcept
+                // recomputes the set of instances!
+                // TODO handle relationship cover
+                TraversalDescription relationships = Traversal.description().breadthFirst().uniqueness(Uniqueness.NONE).evaluator(Evaluators.atDepth(1)).relationships(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP, Direction.OUTGOING);
+
+                // class cover is handled by
+                // handleCustomRelationshipSubjectConcept
+                Map1<Relationship, Iterator<Triple>> map = new Map1<Relationship, Iterator<Triple>>() {
+                    public Iterator<Triple> map1(Relationship r) {
+                        return handleCustomRelationshipSubjectConcept(sub, Node.createURI((String)r.getProperty("IRI")), obj);
+                    }
+                };
+
+                return WrappedIterator.create(new IteratorIterator<Triple>(new Map1Iterator<Relationship, Iterator<Triple>>(map, relationships.traverse(getClass(sub.getURI())).relationships().iterator())));
+            }
             if (sub.isURI() && obj.isURI()) {
             }
             else {
