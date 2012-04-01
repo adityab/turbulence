@@ -19,26 +19,23 @@ import com.turbulence.core.TurbulenceDriver;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
 
-import me.prettyprint.cassandra.service.template.SuperCfTemplate;
-
 import me.prettyprint.hector.api.beans.HColumn;
 
 import me.prettyprint.hector.api.factory.HFactory;
 
 import me.prettyprint.hector.api.query.SubSliceQuery;
 
-public class ObjectsFilterKeepIterator extends NiceIterator<Triple> {
+public class InstancesFilterKeepIterator extends NiceIterator<Triple> {
     private static final Log logger =
-        LogFactory.getLog(ObjectsFilterKeepIterator.class);
+        LogFactory.getLog(InstancesFilterKeepIterator.class);
 
     private String rowKey;
     private String predicate;
     private FilterIterator<HColumn<String, String>> it;
-    public ObjectsFilterKeepIterator(String rowKey, String predicate, Filter<HColumn<String, String>> filter, String columnFamily) {
+    public InstancesFilterKeepIterator(String rowKey, String predicate, Filter<HColumn<String, String>> filter, String columnFamily) {
         this.rowKey = rowKey;
         this.predicate = predicate;
         // load from SPO table
-        SuperCfTemplate<String, String, String> template = TurbulenceDriver.getSPODataTemplate();
         SubSliceQuery<String, String, String, String> query
             = HFactory.createSubSliceQuery(TurbulenceDriver.getKeyspace(),
                     StringSerializer.get(), StringSerializer.get(),
@@ -54,6 +51,7 @@ public class ObjectsFilterKeepIterator extends NiceIterator<Triple> {
         return it.hasNext();
     }
 
+    // TODO refactor
     public Triple next() {
         HColumn<String, String> col = it.next();
         Node subject = Node.createURI(rowKey);

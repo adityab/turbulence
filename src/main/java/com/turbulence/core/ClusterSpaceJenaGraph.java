@@ -48,7 +48,7 @@ import com.turbulence.core.ClusterSpace;
 
 import com.turbulence.util.AllColumnsIterator;
 import com.turbulence.util.ConceptsInstancesIterator;
-import com.turbulence.util.ObjectsFilterKeepIterator;
+import com.turbulence.util.InstancesFilterKeepIterator;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
 
@@ -365,7 +365,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                         return Triple.create(from.getObject(), from.getPredicate(), from.getSubject());
                     }
                 };
-                ObjectsFilterKeepIterator it = new ObjectsFilterKeepIterator(obj.getURI(), pred.getURI(), filter, "OPSData");
+                InstancesFilterKeepIterator it = new InstancesFilterKeepIterator(obj.getURI(), pred.getURI(), filter, "OPSData");
                 return new Map1Iterator(tripleSwap, it);
             }
             else if (obj.isLiteral()) {
@@ -400,7 +400,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
 
                 while (instances.hasNext()) {
                     HColumn<String, String> instance = instances.next();
-                    it = it.andThen(new ObjectsFilterKeepIterator(instance.getValue(), pred.getURI(), filter, "SPOData"));
+                    it = it.andThen(new InstancesFilterKeepIterator(instance.getValue(), pred.getURI(), filter, "SPOData"));
                 }
                 return it;
             }
@@ -452,7 +452,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             else {
                 throw new QueryExecException("Object is of unknown type");
             }
-            ObjectsFilterKeepIterator iterator = new ObjectsFilterKeepIterator(sub.getURI(), pred.getURI(), filter, "SPOData");
+            InstancesFilterKeepIterator iterator = new InstancesFilterKeepIterator(sub.getURI(), pred.getURI(), filter, "SPOData");
             return iterator;
         }
         else {
