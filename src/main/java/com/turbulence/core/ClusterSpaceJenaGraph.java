@@ -41,11 +41,14 @@ import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.graph.impl.GraphBase;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.util.iterator.Filter;
+import com.hp.hpl.jena.util.iterator.IteratorIterator;
 import com.hp.hpl.jena.util.iterator.NullIterator;
 import com.hp.hpl.jena.util.iterator.Map1;
 import com.hp.hpl.jena.util.iterator.Map1Iterator;
 import com.hp.hpl.jena.util.iterator.NiceIterator;
 import com.hp.hpl.jena.query.QueryExecException;
+
+import com.hp.hpl.jena.util.iterator.WrappedIterator;
 
 import com.hp.hpl.jena.util.IteratorCollection;
 
@@ -458,14 +461,26 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             }
         }
         else if (sub.isURI() && (subjectClass = getClass(sub.getURI())) != null) {
-                // TODO handle entire cover in types check
-            SliceQuery<String, String, String> query = HFactory.createSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
-            query.setColumnFamily("Concepts");
-            query.setKey(sub.getURI());
-            Iterator<HColumn<String, String>> instances = new AllColumnsIterator(query);
+            ExtendedIterator<HColumn<String, String>> instances = NullIterator.instance();
+
+            for (org.neo4j.graphdb.Node n : classCover(sub.getURI())) {
+                SliceQuery<String, String, String> query = HFactory.createSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+                query.setColumnFamily("Concepts");
+                query.setKey((String)n.getProperty("IRI"));
+                instances = instances.andThen(new AllColumnsIterator(query));
+            }
 
             if (obj.equals(Node.ANY)) {
-                return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
+                final String predicateURI = pred.getURI();
+                final Filter<HColumn<String, String>> anyFilter = Filter.any();
+                Map1<HColumn<String, String>, Iterator<Triple>> map = new Map1<HColumn<String, String>, Iterator<Triple>>() {
+                    public Iterator<Triple> map1(HColumn<String, String> column) {
+                        return new InstancesFilterKeepIterator(column.getValue(), predicateURI, anyFilter, "SPOData");
+                    }
+                };
+                Map1Iterator<HColumn<String, String>, Iterator<Triple>> instanceTriples = new Map1Iterator<HColumn<String, String>, Iterator<Triple>>(map, instances);
+
+                return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
             }
             else if (obj.isURI() && (objectClass = getClass(obj.getURI())) != null) {
                 // TODO handle entire cover in types check
