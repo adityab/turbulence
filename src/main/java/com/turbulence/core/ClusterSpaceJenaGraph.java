@@ -1,8 +1,12 @@
 package com.turbulence.core;
 
+import java.net.URI;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -21,6 +25,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.StopEvaluator;
+import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.Evaluation;
@@ -42,21 +47,27 @@ import com.hp.hpl.jena.util.iterator.Map1Iterator;
 import com.hp.hpl.jena.util.iterator.NiceIterator;
 import com.hp.hpl.jena.query.QueryExecException;
 
+import com.hp.hpl.jena.util.IteratorCollection;
+
 import com.hp.hpl.jena.vocabulary.RDF;
 
 import com.turbulence.core.ClusterSpace;
 
 import com.turbulence.util.AllColumnsIterator;
+import com.turbulence.util.AllSubColumnsIterator;
 import com.turbulence.util.ConceptsInstancesIterator;
 import com.turbulence.util.InstancesFilterKeepIterator;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
+
+import me.prettyprint.cassandra.service.template.SuperCfResult;
 
 import me.prettyprint.hector.api.beans.HColumn;
 
 import me.prettyprint.hector.api.factory.HFactory;
 
 import me.prettyprint.hector.api.query.SliceQuery;
+import me.prettyprint.hector.api.query.SubSliceQuery;
 
 class ClusterSpaceJenaIterator extends NiceIterator<Triple> {
     private static final Log logger =
@@ -338,6 +349,26 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         }
 
         //return new ClusterSpaceJenaIterator(trav.traverse(startNode).relationships().iterator());
+    }
+
+    private org.neo4j.graphdb.Node isObjectPropertyRange(final String objectPropertyIRI, final org.neo4j.graphdb.Node rangeClass) {
+        // look in the superclasses for existence of this relationship
+        TraversalDescription trav = Traversal.description().breadthFirst().uniqueness(Uniqueness.NONE).evaluator(Evaluators.atDepth(1)).evaluator(Evaluators.excludeStartPosition()).relationships(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP, Direction.BOTH).evaluator(new Evaluator() {
+            public Evaluation evaluate(Path path) {
+                if (path.lastRelationship() != null
+                    && ((String)path.lastRelationship().getProperty("IRI")).equals(objectPropertyIRI)) {
+                    return Evaluation.INCLUDE_AND_CONTINUE;
+                }
+                return Evaluation.EXCLUDE_AND_CONTINUE;
+            }
+        });
+
+        for (org.neo4j.graphdb.Node n : superclasses(rangeClass)) {
+            Iterator<org.neo4j.graphdb.Node> it = trav.traverse(n).nodes().iterator();
+            if (it.hasNext())
+                return it.next();
+        }
+        return null;
     }
 
     public ExtendedIterator<Triple> handleCustomRelationship(Node sub, Node pred, Node obj) {
