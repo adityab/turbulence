@@ -312,7 +312,47 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 };
                 return WrappedIterator.create(new IteratorIterator<Triple>(new Map1Iterator<HSuperColumn<String, String, String>, Iterator<Triple>>(predicateObjectsMap, new AllSuperColumnsIterator(predQuery))));
             }
-            return null;
+            else if (sub.equals(Node.ANY)) {
+                if (obj.isURI() && getClass(obj.getURI()) != null) {
+                    // TODO does not work
+                    // TODO each call to handleCustomRelationshipSubjectAny
+                    // recomputes the set of instances!
+                    // TODO handle relationship cover
+                    TraversalDescription relationships = Traversal.description().breadthFirst().uniqueness(Uniqueness.NONE).evaluator(Evaluators.atDepth(1)).relationships(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP, Direction.INCOMING);
+
+                    // class cover is handled by
+                    // handleCustomRelationshipSubjectConcept
+                    Map1<Relationship, Iterator<Triple>> map = new Map1<Relationship, Iterator<Triple>>() {
+                        public Iterator<Triple> map1(Relationship r) {
+                            return handleCustomRelationshipSubjectAny(sub, Node.createURI((String)r.getProperty("IRI")), obj);
+                        }
+                    };
+
+                    return WrappedIterator.create(new IteratorIterator<Triple>(new Map1Iterator<Relationship, Iterator<Triple>>(map, relationships.traverse(getClass(obj.getURI())).relationships().iterator())));
+                }
+                else if (obj.isURI()) {
+                    SuperSliceQuery<String, String, String, String> predQuery = HFactory.createSuperSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+                    predQuery.setKey(obj.getURI());
+                    predQuery.setColumnFamily("OPSData");
+
+                    final Map1<Triple, Triple> tripleSwap = new Map1<Triple, Triple>() {
+                        public Triple map1(Triple from) {
+                            return Triple.create(from.getObject(), from.getPredicate(), from.getSubject());
+                        }
+                    };
+
+                    Map1<HSuperColumn<String, String, String>, Iterator<Triple>> predicateObjectsMap = new Map1<HSuperColumn<String, String, String>, Iterator<Triple>>() {
+                        public Iterator<Triple> map1(HSuperColumn<String, String, String> sc) {
+                            String predicate = sc.getName();
+                            Filter<HColumn<String, String>> filter = Filter.any();
+                            return new Map1Iterator<Triple, Triple>(tripleSwap, new InstancesFilterKeepIterator(obj.getURI(), predicate, filter, "OPSData"));
+                        }
+                    };
+                    return WrappedIterator.create(new IteratorIterator<Triple>(new Map1Iterator<HSuperColumn<String, String, String>, Iterator<Triple>>(predicateObjectsMap, new AllSuperColumnsIterator(predQuery))));
+                }
+                throw new QueryExecException("Something went very wrong when sub equals Node.ANY");
+            }
+            throw new QueryExecException("Something went very wrong");
         }
         else {
             throw new QueryExecException("Unknown relationship type");
