@@ -252,48 +252,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         org.neo4j.graphdb.Node startNode = null;
         Direction relationshipDirection;
 
-        /*if (sub.isURI()) {
-            startNode = getClass(sub.getURI());
-            if (startNode == null)
-                return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
-
-            relationshipDirection = Direction.OUTGOING;
-
-            trav = trav.evaluator(Evaluators.atDepth(1));
-
-            if (obj.isURI()) {
-                org.neo4j.graphdb.Node objNode = getClass(obj.getURI());
-                if (objNode == null)
-                    return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
-
-//                trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(objNode));
-//                for (org.neo4j.graphdb.Node equiv : cs.getEquivalentClasses(objNode))
-//                    trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(equiv));
-            }
-        }
-        else if (obj.isURI()) {
-            startNode = getClass(obj.getURI());
-            if (startNode == null)
-                return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
-
-            relationshipDirection = Direction.INCOMING;
-
-            trav = trav.evaluator(Evaluators.atDepth(1));
-
-            if (sub.isURI()) {
-                org.neo4j.graphdb.Node subNode = getClass(sub.getURI());
-                if (subNode == null)
-                    return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
-
-                trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(subNode));
-                for (org.neo4j.graphdb.Node equiv : cs.getEquivalentClasses(subNode))
-                    trav = trav.evaluator(Evaluators.returnWhereEndNodeIs(equiv));
-            }
-        }
-        else {
-            throw new QueryExecException("TODO: both undefined");
-        }*/
-
         if (pred.isURI()
             && pred.getURI().equals(RDF.type.getURI())) {
             if (!obj.isURI())
@@ -312,11 +270,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             }
             return total;
         }
-        /*else if (pred.isURI()
-            && pred.getURI().equals("http://www.w3.org/2000/01/rdf-schema#subClassOf")) {
-            trav = trav.relationships(ClusterSpace.PublicRelTypes.IS_A, relationshipDirection);
-            trav = trav.relationships(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS); // equivalent class never has direction
-        }*/
         else if (pred.isURI()) { /* custom relationship */
             return handleCustomRelationship(sub, pred, obj);
         }
@@ -351,7 +304,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             throw new QueryExecException("Unknown relationship type");
         }
 
-        //return new ClusterSpaceJenaIterator(trav.traverse(startNode).relationships().iterator());
     }
 
     private org.neo4j.graphdb.Node isObjectPropertyRange(final String objectPropertyIRI, final org.neo4j.graphdb.Node rangeClass) {
