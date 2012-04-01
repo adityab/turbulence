@@ -58,6 +58,7 @@ import com.turbulence.core.ClusterSpace;
 
 import com.turbulence.util.AllColumnsIterator;
 import com.turbulence.util.AllSubColumnsIterator;
+import com.turbulence.util.AllSuperColumnsIterator;
 import com.turbulence.util.ConceptsInstancesIterator;
 import com.turbulence.util.InstancesFilterKeepIterator;
 
@@ -66,11 +67,13 @@ import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.template.SuperCfResult;
 
 import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.beans.HSuperColumn;
 
 import me.prettyprint.hector.api.factory.HFactory;
 
 import me.prettyprint.hector.api.query.SliceQuery;
 import me.prettyprint.hector.api.query.SubSliceQuery;
+import me.prettyprint.hector.api.query.SuperSliceQuery;
 
 class ClusterSpaceJenaIterator extends NiceIterator<Triple> {
     private static final Log logger =
@@ -296,31 +299,20 @@ public class ClusterSpaceJenaGraph extends GraphBase {
 
                 return WrappedIterator.create(new IteratorIterator<Triple>(new Map1Iterator<Relationship, Iterator<Triple>>(map, relationships.traverse(getClass(sub.getURI())).relationships().iterator())));
             }
-            if (sub.isURI() && obj.isURI()) {
+            else if (sub.isURI()) {
+                SuperSliceQuery<String, String, String, String> predQuery = HFactory.createSuperSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+                predQuery.setKey(sub.getURI());
+                predQuery.setColumnFamily("SPOData");
+                Map1<HSuperColumn<String, String, String>, Iterator<Triple>> predicateObjectsMap = new Map1<HSuperColumn<String, String, String>, Iterator<Triple>>() {
+                    public Iterator<Triple> map1(HSuperColumn<String, String, String> sc) {
+                        String predicate = sc.getName();
+                        Filter<HColumn<String, String>> filter = Filter.any();
+                        return new InstancesFilterKeepIterator(sub.getURI(), predicate, filter, "SPOData");
+                    }
+                };
+                return WrappedIterator.create(new IteratorIterator<Triple>(new Map1Iterator<HSuperColumn<String, String, String>, Iterator<Triple>>(predicateObjectsMap, new AllSuperColumnsIterator(predQuery))));
             }
-            else {
-                throw new RuntimeException("Arbitrary relationship expects well defined subject and object");
-            }
-
-            org.neo4j.graphdb.Node subNode = getClass(sub.getURI());
-            org.neo4j.graphdb.Node objNode = getClass(obj.getURI());
-
-            if (subNode == null || objNode == null) {
-                throw new RuntimeException("Unknown concepts");
-            }
-
-            StandardExpander expander = StandardExpander.DEFAULT
-                                        .add(ClusterSpace.PublicRelTypes.EQUIVALENT_CLASS)
-                                        .add(ClusterSpace.PublicRelTypes.IS_A)
-                                        .add(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP);
-
-            PathFinder<Path> pf = GraphAlgoFactory.allSimplePaths(expander, 4);
-
-            ExtendedIterator<Triple> it = new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
-            for (Path path : pf.findAllPaths(subNode, objNode)) {
-                it = it.andThen(new ClusterSpaceJenaIterator(path.relationships().iterator()));
-            }
-            return it;
+            return null;
         }
         else {
             throw new QueryExecException("Unknown relationship type");
