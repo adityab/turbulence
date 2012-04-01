@@ -376,261 +376,275 @@ public class ClusterSpaceJenaGraph extends GraphBase {
 
     public ExtendedIterator<Triple> handleCustomRelationship(Node sub, Node pred, Node obj) {
         org.neo4j.graphdb.Node subjectClass = null;
-        org.neo4j.graphdb.Node objectClass = null;
 
         if (sub.equals(Node.ANY)) {
-            if (obj.equals(Node.ANY)) {
-                throw new UnsupportedOperationException();
-            }
-            else if (obj.isURI() && (objectClass = getClass(obj.getURI())) != null) {
-                // TODO handle equivalent object properties coming in also
-                final String objectPropertyIRI = pred.getURI();
-                org.neo4j.graphdb.Node domain = isObjectPropertyRange(objectPropertyIRI, objectClass);
-                if (domain == null)
-                    return new NullIterator<Triple>();
-                logger.warn("Domain " + domain.getProperty("IRI"));
-
-                // for each class in cover of domain
-                    // for every instance of the class
-                        // if instance -> pred -> o  and o.type in object cover
-                            // emit the instance -> pred -> o pair
-                final Set<String> rangeCoverIRIs = IteratorCollection.iteratorToSet(new Map1Iterator<org.neo4j.graphdb.Node, String>(new Map1<org.neo4j.graphdb.Node, String>() {
-                    public String map1(org.neo4j.graphdb.Node from) {
-                        return (String) from.getProperty("IRI");
-                    }
-                }, classCover(obj.getURI()).iterator()));
-                logger.warn("Range cover " + rangeCoverIRIs);
-
-                Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
-                    public boolean accept(HColumn<String, String> o) {
-                        SubSliceQuery<String, String, String, String> query
-                            = HFactory.createSubSliceQuery(TurbulenceDriver.getKeyspace(),
-                                    StringSerializer.get(), StringSerializer.get(),
-                                    StringSerializer.get(), StringSerializer.get());
-                        query.setKey(o.getValue());
-                        query.setSuperColumn(RDF.type.getURI());
-                        query.setColumnFamily("SPOData");
-                        AllSubColumnsIterator<String, String> it = new AllSubColumnsIterator<String, String>(query);
-                        while (it.hasNext()) {
-                            HColumn<String, String> col = it.next();
-                            if (rangeCoverIRIs.contains(col.getValue())) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    }
-                };
-
-
-                ExtendedIterator<Triple> result = NullIterator.instance();
-                for (org.neo4j.graphdb.Node domainNode : classCover((String)domain.getProperty("IRI"))) {
-                    SliceQuery<String, String, String> query = HFactory.createSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
-                    query.setColumnFamily("Concepts");
-                    query.setKey((String)domainNode.getProperty("IRI"));
-                    Iterator<HColumn<String, String>> instances = new AllColumnsIterator<String, String>(query);
-
-                    while (instances.hasNext()) {
-                        String instance = instances.next().getValue();
-                        InstancesFilterKeepIterator objects = new InstancesFilterKeepIterator(instance, pred.getURI(), filter, "SPOData");
-                        result = result.andThen(objects);
-                    }
-                }
-                return result;
-            }
-            else if (obj.isURI()) { // could be an instance
-                Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
-                    public boolean accept(HColumn<String, String> o) {
-                        return true;
-                    }
-                };
-
-                // since we need to invert the OPS triple to SPO
-                Map1<Triple, Triple> tripleSwap = new Map1<Triple, Triple>() {
-                    public Triple map1(Triple from) {
-                        return Triple.create(from.getObject(), from.getPredicate(), from.getSubject());
-                    }
-                };
-                InstancesFilterKeepIterator it = new InstancesFilterKeepIterator(obj.getURI(), pred.getURI(), filter, "OPSData");
-                return new Map1Iterator(tripleSwap, it);
-            }
-            else if (obj.isLiteral()) {
-                return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
-            }
-            else {
-                throw new QueryExecException("Object is of unknown type");
-            }
+            return handleCustomRelationshipSubjectAny(sub, pred, obj);
         }
         else if (sub.isURI() && (subjectClass = getClass(sub.getURI())) != null) {
-            ExtendedIterator<HColumn<String, String>> instances = NullIterator.instance();
-
-            for (org.neo4j.graphdb.Node n : classCover(sub.getURI())) {
-                SliceQuery<String, String, String> query = HFactory.createSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
-                query.setColumnFamily("Concepts");
-                query.setKey((String)n.getProperty("IRI"));
-                instances = instances.andThen(new AllColumnsIterator(query));
-            }
-
-            if (obj.equals(Node.ANY)) {
-                final String predicateURI = pred.getURI();
-                final Filter<HColumn<String, String>> anyFilter = Filter.any();
-                Map1<HColumn<String, String>, Iterator<Triple>> map = new Map1<HColumn<String, String>, Iterator<Triple>>() {
-                    public Iterator<Triple> map1(HColumn<String, String> column) {
-                        return new InstancesFilterKeepIterator(column.getValue(), predicateURI, anyFilter, "SPOData");
-                    }
-                };
-                Map1Iterator<HColumn<String, String>, Iterator<Triple>> instanceTriples = new Map1Iterator<HColumn<String, String>, Iterator<Triple>>(map, instances);
-
-                return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
-            }
-            else if (obj.isURI() && (objectClass = getClass(obj.getURI())) != null) {
-                // TODO handle equivalent object properties coming in also
-                final String objectPropertyIRI = pred.getURI();
-                org.neo4j.graphdb.Node domain = isObjectPropertyRange(objectPropertyIRI, objectClass);
-                if (domain == null)
-                    return new NullIterator<Triple>();
-                logger.warn("Domain " + domain.getProperty("IRI"));
-
-                // for each class in cover of domain
-                    // for every instance of the class
-                        // if instance -> pred -> o  and o.type in object cover
-                            // emit the instance -> pred -> o pair
-                final Set<String> rangeCoverIRIs = IteratorCollection.iteratorToSet(new Map1Iterator<org.neo4j.graphdb.Node, String>(new Map1<org.neo4j.graphdb.Node, String>() {
-                    public String map1(org.neo4j.graphdb.Node from) {
-                        return (String) from.getProperty("IRI");
-                    }
-                }, classCover(obj.getURI()).iterator()));
-                logger.warn("Range cover " + rangeCoverIRIs);
-
-                final Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
-                    public boolean accept(HColumn<String, String> o) {
-                        SubSliceQuery<String, String, String, String> query
-                            = HFactory.createSubSliceQuery(TurbulenceDriver.getKeyspace(),
-                                    StringSerializer.get(), StringSerializer.get(),
-                                    StringSerializer.get(), StringSerializer.get());
-                        query.setKey(o.getValue());
-                        query.setSuperColumn(RDF.type.getURI());
-                        query.setColumnFamily("SPOData");
-                        AllSubColumnsIterator<String, String> it = new AllSubColumnsIterator<String, String>(query);
-                        while (it.hasNext()) {
-                            HColumn<String, String> col = it.next();
-                            if (rangeCoverIRIs.contains(col.getValue())) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    }
-                };
-
-                final String predicateURI = pred.getURI();
-                Map1<HColumn<String, String>, Iterator<Triple>> map = new Map1<HColumn<String, String>, Iterator<Triple>>() {
-                    public Iterator<Triple> map1(HColumn<String, String> column) {
-                        return new InstancesFilterKeepIterator(column.getValue(), predicateURI, filter, "SPOData");
-                    }
-                };
-                Map1Iterator<HColumn<String, String>, Iterator<Triple>> instanceTriples = new Map1Iterator<HColumn<String, String>, Iterator<Triple>>(map, instances);
-
-                return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
-            }
-            else if (obj.isURI()) {
-                final Set<String> domainIRIs = IteratorCollection.iteratorToSet(new Map1Iterator<org.neo4j.graphdb.Node, String>(new Map1<org.neo4j.graphdb.Node, String>() {
-                    public String map1(org.neo4j.graphdb.Node from) {
-                        return (String) from.getProperty("IRI");
-                    }
-                }, classCover(sub.getURI()).iterator()));
-
-                final Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
-                    public boolean accept(HColumn<String, String> o) {
-                        SubSliceQuery<String, String, String, String> query
-                            = HFactory.createSubSliceQuery(TurbulenceDriver.getKeyspace(),
-                                    StringSerializer.get(), StringSerializer.get(),
-                                    StringSerializer.get(), StringSerializer.get());
-                        query.setKey(o.getValue());
-                        query.setSuperColumn(RDF.type.getURI());
-                        query.setColumnFamily("SPOData");
-                        AllSubColumnsIterator<String, String> it = new AllSubColumnsIterator<String, String>(query);
-                        while (it.hasNext()) {
-                            HColumn<String, String> col = it.next();
-                            if (domainIRIs.contains(col.getValue())) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    }
-                };
-
-                // since we need to invert the OPS triple to SPO
-                Map1<Triple, Triple> tripleSwap = new Map1<Triple, Triple>() {
-                    public Triple map1(Triple from) {
-                        return Triple.create(from.getObject(), from.getPredicate(), from.getSubject());
-                    }
-                };
-                InstancesFilterKeepIterator it = new InstancesFilterKeepIterator(obj.getURI(), pred.getURI(), filter, "OPSData");
-                return new Map1Iterator(tripleSwap, it);
-            }
-            else if (obj.isLiteral()) {
-                final String predicateURI = pred.getURI();
-                final String objectValue = obj.getLiteral().toString();
-                final Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
-                    public boolean accept(HColumn<String, String> o) {
-                        return o.getValue().equals(objectValue);
-                    }
-                };
-                Map1<HColumn<String, String>, Iterator<Triple>> map = new Map1<HColumn<String, String>, Iterator<Triple>>() {
-                    public Iterator<Triple> map1(HColumn<String, String> column) {
-                        return new InstancesFilterKeepIterator(column.getValue(), predicateURI, filter, "SPOData");
-                    }
-                };
-                Map1Iterator<HColumn<String, String>, Iterator<Triple>> instanceTriples = new Map1Iterator<HColumn<String, String>, Iterator<Triple>>(map, instances);
-
-                return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
-            }
-            else {
-                throw new QueryExecException("Object is of unknown type");
-            }
+            return handleCustomRelationshipSubjectConcept(sub, pred, obj);
         }
         else if (sub.isURI()) {
-            Filter<HColumn<String, String>> filter = null;
-            if (obj.equals(Node.ANY)) {
-                // CHECKED 31/3/12 9:59
-                filter = new Filter<HColumn<String, String>>() {
-                    public boolean accept(HColumn<String, String> o) {
-                        return true;
-                    }
-                };
-            }
-            else if (obj.isURI() && (objectClass = getClass(obj.getURI())) != null) {
-                // TODO handle entire cover in types check
-                filter = new Filter<HColumn<String, String>>() {
-                    public boolean accept(HColumn<String, String> o) {
-                        return true;
-                    }
-                };
-            }
-            else if (obj.isURI()) {
-                // CHECKED 31/3/12 10:02
-                final String objectURI = obj.getURI();
-                filter = new Filter<HColumn<String, String>>() {
-                    public boolean accept(HColumn<String, String> o) {
-                        return o.getValue().equals(objectURI);
-                    }
-                };
-            }
-            else if (obj.isLiteral()) {
-                final String objectValue = obj.getLiteral().toString();
-                filter = new Filter<HColumn<String, String>>() {
-                    public boolean accept(HColumn<String, String> o) {
-                        return o.getValue().equals(objectValue);
-                    }
-                };
-            }
-            else {
-                throw new QueryExecException("Object is of unknown type");
-            }
-            InstancesFilterKeepIterator iterator = new InstancesFilterKeepIterator(sub.getURI(), pred.getURI(), filter, "SPOData");
-            return iterator;
+            return handleCustomRelationshipSubjectInstance(sub, pred, obj);
         }
         else {
             throw new QueryExecException("Subject is of unknown type");
         }
+    }
+
+    private ExtendedIterator<Triple> handleCustomRelationshipSubjectAny(Node sub, Node pred, Node obj) {
+        org.neo4j.graphdb.Node objectClass = null;
+        if (obj.equals(Node.ANY)) {
+            throw new UnsupportedOperationException();
+        }
+        else if (obj.isURI() && (objectClass = getClass(obj.getURI())) != null) {
+            // TODO handle equivalent object properties coming in also
+            final String objectPropertyIRI = pred.getURI();
+            org.neo4j.graphdb.Node domain = isObjectPropertyRange(objectPropertyIRI, objectClass);
+            if (domain == null)
+                return new NullIterator<Triple>();
+            logger.warn("Domain " + domain.getProperty("IRI"));
+
+            // for each class in cover of domain
+                // for every instance of the class
+                    // if instance -> pred -> o  and o.type in object cover
+                        // emit the instance -> pred -> o pair
+            final Set<String> rangeCoverIRIs = IteratorCollection.iteratorToSet(new Map1Iterator<org.neo4j.graphdb.Node, String>(new Map1<org.neo4j.graphdb.Node, String>() {
+                public String map1(org.neo4j.graphdb.Node from) {
+                    return (String) from.getProperty("IRI");
+                }
+            }, classCover(obj.getURI()).iterator()));
+            logger.warn("Range cover " + rangeCoverIRIs);
+
+            Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
+                public boolean accept(HColumn<String, String> o) {
+                    SubSliceQuery<String, String, String, String> query
+                        = HFactory.createSubSliceQuery(TurbulenceDriver.getKeyspace(),
+                                StringSerializer.get(), StringSerializer.get(),
+                                StringSerializer.get(), StringSerializer.get());
+                    query.setKey(o.getValue());
+                    query.setSuperColumn(RDF.type.getURI());
+                    query.setColumnFamily("SPOData");
+                    AllSubColumnsIterator<String, String> it = new AllSubColumnsIterator<String, String>(query);
+                    while (it.hasNext()) {
+                        HColumn<String, String> col = it.next();
+                        if (rangeCoverIRIs.contains(col.getValue())) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            };
+
+
+            ExtendedIterator<Triple> result = NullIterator.instance();
+            for (org.neo4j.graphdb.Node domainNode : classCover((String)domain.getProperty("IRI"))) {
+                SliceQuery<String, String, String> query = HFactory.createSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+                query.setColumnFamily("Concepts");
+                query.setKey((String)domainNode.getProperty("IRI"));
+                Iterator<HColumn<String, String>> instances = new AllColumnsIterator<String, String>(query);
+
+                while (instances.hasNext()) {
+                    String instance = instances.next().getValue();
+                    InstancesFilterKeepIterator objects = new InstancesFilterKeepIterator(instance, pred.getURI(), filter, "SPOData");
+                    result = result.andThen(objects);
+                }
+            }
+            return result;
+        }
+        else if (obj.isURI()) { // could be an instance
+            Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
+                public boolean accept(HColumn<String, String> o) {
+                    return true;
+                }
+            };
+
+            // since we need to invert the OPS triple to SPO
+            Map1<Triple, Triple> tripleSwap = new Map1<Triple, Triple>() {
+                public Triple map1(Triple from) {
+                    return Triple.create(from.getObject(), from.getPredicate(), from.getSubject());
+                }
+            };
+            InstancesFilterKeepIterator it = new InstancesFilterKeepIterator(obj.getURI(), pred.getURI(), filter, "OPSData");
+            return new Map1Iterator(tripleSwap, it);
+        }
+        else if (obj.isLiteral()) {
+            return new ClusterSpaceJenaIterator(EmptyIterator.INSTANCE);
+        }
+        else {
+            throw new QueryExecException("Object is of unknown type");
+        }
+    }
+
+    private ExtendedIterator<Triple> handleCustomRelationshipSubjectConcept(Node sub, Node pred, Node obj) {
+        org.neo4j.graphdb.Node objectClass = null;
+        ExtendedIterator<HColumn<String, String>> instances = NullIterator.instance();
+
+        for (org.neo4j.graphdb.Node n : classCover(sub.getURI())) {
+            SliceQuery<String, String, String> query = HFactory.createSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+            query.setColumnFamily("Concepts");
+            query.setKey((String)n.getProperty("IRI"));
+            instances = instances.andThen(new AllColumnsIterator(query));
+        }
+
+        if (obj.equals(Node.ANY)) {
+            final String predicateURI = pred.getURI();
+            final Filter<HColumn<String, String>> anyFilter = Filter.any();
+            Map1<HColumn<String, String>, Iterator<Triple>> map = new Map1<HColumn<String, String>, Iterator<Triple>>() {
+                public Iterator<Triple> map1(HColumn<String, String> column) {
+                    return new InstancesFilterKeepIterator(column.getValue(), predicateURI, anyFilter, "SPOData");
+                }
+            };
+            Map1Iterator<HColumn<String, String>, Iterator<Triple>> instanceTriples = new Map1Iterator<HColumn<String, String>, Iterator<Triple>>(map, instances);
+
+            return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
+        }
+        else if (obj.isURI() && (objectClass = getClass(obj.getURI())) != null) {
+            // TODO handle equivalent object properties coming in also
+            final String objectPropertyIRI = pred.getURI();
+            org.neo4j.graphdb.Node domain = isObjectPropertyRange(objectPropertyIRI, objectClass);
+            if (domain == null)
+                return new NullIterator<Triple>();
+            logger.warn("Domain " + domain.getProperty("IRI"));
+
+            // for each class in cover of domain
+                // for every instance of the class
+                    // if instance -> pred -> o  and o.type in object cover
+                        // emit the instance -> pred -> o pair
+            final Set<String> rangeCoverIRIs = IteratorCollection.iteratorToSet(new Map1Iterator<org.neo4j.graphdb.Node, String>(new Map1<org.neo4j.graphdb.Node, String>() {
+                public String map1(org.neo4j.graphdb.Node from) {
+                    return (String) from.getProperty("IRI");
+                }
+            }, classCover(obj.getURI()).iterator()));
+            logger.warn("Range cover " + rangeCoverIRIs);
+
+            final Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
+                public boolean accept(HColumn<String, String> o) {
+                    SubSliceQuery<String, String, String, String> query
+                        = HFactory.createSubSliceQuery(TurbulenceDriver.getKeyspace(),
+                                StringSerializer.get(), StringSerializer.get(),
+                                StringSerializer.get(), StringSerializer.get());
+                    query.setKey(o.getValue());
+                    query.setSuperColumn(RDF.type.getURI());
+                    query.setColumnFamily("SPOData");
+                    AllSubColumnsIterator<String, String> it = new AllSubColumnsIterator<String, String>(query);
+                    while (it.hasNext()) {
+                        HColumn<String, String> col = it.next();
+                        if (rangeCoverIRIs.contains(col.getValue())) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            };
+
+            final String predicateURI = pred.getURI();
+            Map1<HColumn<String, String>, Iterator<Triple>> map = new Map1<HColumn<String, String>, Iterator<Triple>>() {
+                public Iterator<Triple> map1(HColumn<String, String> column) {
+                    return new InstancesFilterKeepIterator(column.getValue(), predicateURI, filter, "SPOData");
+                }
+            };
+            Map1Iterator<HColumn<String, String>, Iterator<Triple>> instanceTriples = new Map1Iterator<HColumn<String, String>, Iterator<Triple>>(map, instances);
+
+            return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
+        }
+        else if (obj.isURI()) {
+            final Set<String> domainIRIs = IteratorCollection.iteratorToSet(new Map1Iterator<org.neo4j.graphdb.Node, String>(new Map1<org.neo4j.graphdb.Node, String>() {
+                public String map1(org.neo4j.graphdb.Node from) {
+                    return (String) from.getProperty("IRI");
+                }
+            }, classCover(sub.getURI()).iterator()));
+
+            final Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
+                public boolean accept(HColumn<String, String> o) {
+                    SubSliceQuery<String, String, String, String> query
+                        = HFactory.createSubSliceQuery(TurbulenceDriver.getKeyspace(),
+                                StringSerializer.get(), StringSerializer.get(),
+                                StringSerializer.get(), StringSerializer.get());
+                    query.setKey(o.getValue());
+                    query.setSuperColumn(RDF.type.getURI());
+                    query.setColumnFamily("SPOData");
+                    AllSubColumnsIterator<String, String> it = new AllSubColumnsIterator<String, String>(query);
+                    while (it.hasNext()) {
+                        HColumn<String, String> col = it.next();
+                        if (domainIRIs.contains(col.getValue())) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            };
+
+            // since we need to invert the OPS triple to SPO
+            Map1<Triple, Triple> tripleSwap = new Map1<Triple, Triple>() {
+                public Triple map1(Triple from) {
+                    return Triple.create(from.getObject(), from.getPredicate(), from.getSubject());
+                }
+            };
+            InstancesFilterKeepIterator it = new InstancesFilterKeepIterator(obj.getURI(), pred.getURI(), filter, "OPSData");
+            return new Map1Iterator(tripleSwap, it);
+        }
+        else if (obj.isLiteral()) {
+            final String predicateURI = pred.getURI();
+            final String objectValue = obj.getLiteral().toString();
+            final Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
+                public boolean accept(HColumn<String, String> o) {
+                    return o.getValue().equals(objectValue);
+                }
+            };
+            Map1<HColumn<String, String>, Iterator<Triple>> map = new Map1<HColumn<String, String>, Iterator<Triple>>() {
+                public Iterator<Triple> map1(HColumn<String, String> column) {
+                    return new InstancesFilterKeepIterator(column.getValue(), predicateURI, filter, "SPOData");
+                }
+            };
+            Map1Iterator<HColumn<String, String>, Iterator<Triple>> instanceTriples = new Map1Iterator<HColumn<String, String>, Iterator<Triple>>(map, instances);
+
+            return WrappedIterator.create(new IteratorIterator<Triple>(instanceTriples));
+        }
+        else {
+            throw new QueryExecException("Object is of unknown type");
+        }
+    }
+
+    private ExtendedIterator<Triple> handleCustomRelationshipSubjectInstance(Node sub, Node pred, Node obj) {
+        org.neo4j.graphdb.Node objectClass = null;
+        Filter<HColumn<String, String>> filter = null;
+        if (obj.equals(Node.ANY)) {
+            // CHECKED 31/3/12 9:59
+            filter = new Filter<HColumn<String, String>>() {
+                public boolean accept(HColumn<String, String> o) {
+                    return true;
+                }
+            };
+        }
+        else if (obj.isURI() && (objectClass = getClass(obj.getURI())) != null) {
+            // TODO handle entire cover in types check
+            filter = new Filter<HColumn<String, String>>() {
+                public boolean accept(HColumn<String, String> o) {
+                    return true;
+                }
+            };
+        }
+        else if (obj.isURI()) {
+            // CHECKED 31/3/12 10:02
+            final String objectURI = obj.getURI();
+            filter = new Filter<HColumn<String, String>>() {
+                public boolean accept(HColumn<String, String> o) {
+                    return o.getValue().equals(objectURI);
+                }
+            };
+        }
+        else if (obj.isLiteral()) {
+            final String objectValue = obj.getLiteral().toString();
+            filter = new Filter<HColumn<String, String>>() {
+                public boolean accept(HColumn<String, String> o) {
+                    return o.getValue().equals(objectValue);
+                }
+            };
+        }
+        else {
+            throw new QueryExecException("Object is of unknown type");
+        }
+        InstancesFilterKeepIterator iterator = new InstancesFilterKeepIterator(sub.getURI(), pred.getURI(), filter, "SPOData");
+        return iterator;
     }
 }
