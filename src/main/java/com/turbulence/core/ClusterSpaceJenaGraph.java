@@ -235,7 +235,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         final Node sub  = triple.getSubject();
         final Node pred = triple.getPredicate();
         final Node obj  = triple.getObject();
-        //logger.warn("graphBaseFind: " + sub + " -- " + pred + " -- " + obj);
 
         TraversalDescription trav = Traversal.description()
                                     .breadthFirst()
@@ -379,7 +378,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         return null;
     }
 
-    public ExtendedIterator<Triple> handleCustomRelationship(Node sub, Node pred, Node obj) {
+    public ExtendedIterator<Triple> handleCustomRelationship(final Node sub, final Node pred, final Node obj) {
         org.neo4j.graphdb.Node subjectClass = null;
 
         if (sub.equals(Node.ANY)) {
@@ -396,7 +395,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         }
     }
 
-    private ExtendedIterator<Triple> handleCustomRelationshipSubjectAny(Node sub, Node pred, Node obj) {
+    private ExtendedIterator<Triple> handleCustomRelationshipSubjectAny(final Node sub, final Node pred, final Node obj) {
         org.neo4j.graphdb.Node objectClass = null;
         if (obj.equals(Node.ANY)) {
             throw new UnsupportedOperationException();
@@ -480,7 +479,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         }
     }
 
-    private ExtendedIterator<Triple> handleCustomRelationshipSubjectConcept(Node sub, Node pred, Node obj) {
+    private ExtendedIterator<Triple> handleCustomRelationshipSubjectConcept(final Node sub, final Node pred, final Node obj) {
         org.neo4j.graphdb.Node objectClass = null;
         ExtendedIterator<HColumn<String, String>> instances = NullIterator.instance();
 
@@ -509,7 +508,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             org.neo4j.graphdb.Node domain = isObjectPropertyRange(objectPropertyIRI, objectClass);
             if (domain == null)
                 return new NullIterator<Triple>();
-            logger.warn("Domain " + domain.getProperty("IRI"));
 
             // for each class in cover of domain
                 // for every instance of the class
@@ -520,7 +518,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                     return (String) from.getProperty("IRI");
                 }
             }, classCover(obj.getURI()).iterator()));
-            logger.warn("Range cover " + rangeCoverIRIs);
 
             final Filter<HColumn<String, String>> filter = new Filter<HColumn<String, String>>() {
                 public boolean accept(HColumn<String, String> o) {
@@ -610,7 +607,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
         }
     }
 
-    private ExtendedIterator<Triple> handleCustomRelationshipSubjectInstance(Node sub, Node pred, Node obj) {
+    private ExtendedIterator<Triple> handleCustomRelationshipSubjectInstance(final Node sub, final Node pred, final Node obj) {
         org.neo4j.graphdb.Node objectClass = null;
         Filter<HColumn<String, String>> filter = null;
         if (obj.equals(Node.ANY)) {
