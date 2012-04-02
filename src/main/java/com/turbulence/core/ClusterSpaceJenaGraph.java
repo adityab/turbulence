@@ -280,9 +280,6 @@ public class ClusterSpaceJenaGraph extends GraphBase {
             if (sub.equals(Node.ANY) && obj.equals(Node.ANY)) {
                 throw new QueryExecException("predicate ANY cannot have both subject and object as ANY");
             }
-            if (!(sub.equals(Node.ANY) || obj.equals(Node.ANY))) {
-                // TODO handle s ?p o
-            }
             else if (sub.isURI() && getClass(sub.getURI()) != null) {
                 // TODO each call to handleCustomRelationshipSubjectConcept
                 // recomputes the set of instances!
@@ -306,8 +303,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 Map1<HSuperColumn<String, String, String>, Iterator<Triple>> predicateObjectsMap = new Map1<HSuperColumn<String, String, String>, Iterator<Triple>>() {
                     public Iterator<Triple> map1(HSuperColumn<String, String, String> sc) {
                         String predicate = sc.getName();
-                        Filter<HColumn<String, String>> filter = Filter.any();
-                        return new InstancesFilterKeepIterator(sub.getURI(), predicate, filter, "SPOData");
+                        return handleCustomRelationshipSubjectInstance(sub, Node.createURI(predicate), obj);
                     }
                 };
                 return WrappedIterator.create(new IteratorIterator<Triple>(new Map1Iterator<HSuperColumn<String, String, String>, Iterator<Triple>>(predicateObjectsMap, new AllSuperColumnsIterator(predQuery))));
@@ -349,6 +345,9 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                         }
                     };
                     return WrappedIterator.create(new IteratorIterator<Triple>(new Map1Iterator<HSuperColumn<String, String, String>, Iterator<Triple>>(predicateObjectsMap, new AllSuperColumnsIterator(predQuery))));
+                }
+                else if (obj.isLiteral()) {
+                    throw new UnsupportedOperationException();
                 }
                 throw new QueryExecException("Something went very wrong when sub equals Node.ANY");
             }
