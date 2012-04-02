@@ -439,19 +439,21 @@ public class ClusterSpaceJenaGraph extends GraphBase {
                 }
             };
 
-
             ExtendedIterator<Triple> result = NullIterator.instance();
+            final Filter<HColumn<String, String>> anyFilter = Filter.any();
             for (org.neo4j.graphdb.Node domainNode : classCover((String)domain.getProperty("IRI"))) {
                 SliceQuery<String, String, String> query = HFactory.createSliceQuery(TurbulenceDriver.getKeyspace(), StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
                 query.setColumnFamily("Concepts");
                 query.setKey((String)domainNode.getProperty("IRI"));
                 Iterator<HColumn<String, String>> instances = new AllColumnsIterator<String, String>(query);
 
-                while (instances.hasNext()) {
-                    String instance = instances.next().getValue();
-                    InstancesFilterKeepIterator objects = new InstancesFilterKeepIterator(instance, pred.getURI(), filter, "SPOData");
-                    result = result.andThen(objects);
-                }
+                Map1<HColumn<String, String>, Iterator<Triple>> map = new Map1<HColumn<String, String>, Iterator<Triple>>() {
+                    public Iterator<Triple> map1(HColumn<String, String> column) {
+                        return new InstancesFilterKeepIterator(column.getValue(), pred.getURI(), anyFilter, "SPOData");
+                    }
+                };
+                Map1Iterator<HColumn<String, String>, Iterator<Triple>> instanceTriples = new Map1Iterator<HColumn<String, String>, Iterator<Triple>>(map, instances);
+                result = result.andThen(new IteratorIterator<Triple>(instanceTriples));
             }
             return result;
         }
