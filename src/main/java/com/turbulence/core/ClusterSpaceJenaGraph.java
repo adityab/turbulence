@@ -360,7 +360,7 @@ public class ClusterSpaceJenaGraph extends GraphBase {
 
     private org.neo4j.graphdb.Node isObjectPropertyRange(final String objectPropertyIRI, final org.neo4j.graphdb.Node rangeClass) {
         // look in the superclasses for existence of this relationship
-        TraversalDescription trav = Traversal.description().breadthFirst().uniqueness(Uniqueness.NONE).evaluator(Evaluators.atDepth(1)).evaluator(Evaluators.excludeStartPosition()).relationships(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP, Direction.BOTH).evaluator(new Evaluator() {
+        TraversalDescription trav = Traversal.description().breadthFirst().uniqueness(Uniqueness.NONE).evaluator(Evaluators.atDepth(1)).evaluator(Evaluators.excludeStartPosition()).relationships(ClusterSpace.PublicRelTypes.OBJECT_RELATIONSHIP, Direction.INCOMING).evaluator(new Evaluator() {
             public Evaluation evaluate(Path path) {
                 if (path.lastRelationship() != null
                     && ((String)path.lastRelationship().getProperty("IRI")).equals(objectPropertyIRI)) {
