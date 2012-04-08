@@ -5,3 +5,9 @@ paper/turbulence.pdf
 bin/
 .settings/
 target/
+*.aux
+*.bbl
+*.blg
+*.pdf
+*.dvi
+*.log
