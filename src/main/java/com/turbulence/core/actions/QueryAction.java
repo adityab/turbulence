@@ -60,11 +60,16 @@ public class QueryAction implements Action {
 
         Model model = ModelFactory.createModelForGraph(new ClusterSpaceJenaGraph());
         QueryExecution exec = QueryExecutionFactory.create(q, model);
+        // TODO: uncomment once debugging is done
+        //if (q.getResultVars().isEmpty())
+        //    return null;
+
         final ResultSet resultSet = exec.execSelect();
 
         return new StreamingOutput() {
             public void write(OutputStream out) throws IOException, WebApplicationException {
                 Set<String> rowKeys = new HashSet<String>();
+
                 while (resultSet.hasNext()) {
                     QuerySolution row = resultSet.next();
 

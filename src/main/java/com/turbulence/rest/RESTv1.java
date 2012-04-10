@@ -66,4 +66,12 @@ public class RESTv1 {
         final QueryAction act = ActionFactory.createQueryAction(body);
         return act.stream();
     }
+
+    @POST
+    @Path("/lubm_query")
+    @Produces("application/xml")
+    public Result lubmQuery(String body) {
+        final LUBMQueryAction act = ActionFactory.createLUBMQueryAction(body);
+        return execute(act);
+    }
 }

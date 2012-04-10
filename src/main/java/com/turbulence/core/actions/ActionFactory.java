@@ -16,4 +16,8 @@ public class ActionFactory {
     public static QueryAction createQueryAction(String query) {
         return new QueryAction(query);
     }
+
+    public static LUBMQueryAction createLUBMQueryAction(String query) {
+        return new LUBMQueryAction(query);
+    }
 }
