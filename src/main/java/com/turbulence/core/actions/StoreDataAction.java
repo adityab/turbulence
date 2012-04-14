@@ -111,6 +111,8 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
             //logger.warn("Saving new entry of type " + object.getURI());
             ColumnFamilyUpdater<String, String> updater = conceptsTemplate.createUpdater(object.getURI());
 
+            if (subject.isAnonymous() && subject.getAnonymousID().isEmpty())
+                return;
             if (subject.isAnonymous())
                 updater.setString(DigestUtils.md5Hex(subject.getAnonymousID()), subject.getAnonymousID());
             else
@@ -145,6 +147,8 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
 
     private void saveTriple(AResource subject, AResource predicate, String object, String objectType) {
         String rowKey = subject.isAnonymous() ? subject.getAnonymousID() : subject.getURI();
+        if (rowKey.isEmpty())
+            return;
         SuperCfUpdater<String, String, String> spoUpdater = spoTemplate.createUpdater(rowKey, predicate.getURI());
         spoUpdater.setString(objectType + "|" + DigestUtils.md5Hex(object), object);
         try {
@@ -180,7 +184,10 @@ public class StoreDataAction implements Action, ARPEventHandler, ErrorHandler {
         writer.write(currentModel, w, null);
         //logger.warn("Will save dump " + w.toString());
         //logger.warn("to row " + currentSubject.getPropertyResourceValue(RDF.type).getURI() + " column " + currentSubject.getURI());
-        ColumnFamilyUpdater<String, String> instanceDataUpdater = instanceDataTemplate.createUpdater(currentSubject.isAnon() ? currentSubject.getId().toString() : currentSubject.getURI());
+        String key = currentSubject.isAnon() ? currentSubject.getId().toString() : currentSubject.getURI();
+        if (key.isEmpty())
+            return;
+        ColumnFamilyUpdater<String, String> instanceDataUpdater = instanceDataTemplate.createUpdater(key);
         instanceDataUpdater.setString("data", w.toString());
 
         try {
