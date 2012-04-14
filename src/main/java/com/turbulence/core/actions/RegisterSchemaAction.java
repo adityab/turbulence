@@ -272,20 +272,15 @@ public class RegisterSchemaAction implements Action {
 
         OWLClass Nclass = man.getOWLDataFactory().getOWLClass(IRI.create((String)N.getProperty("IRI")));
         OWLClass Xclass = man.getOWLDataFactory().getOWLClass(IRI.create((String)X.getProperty("IRI")));
-        logger.warn("Comparing " + Nclass + " and " + Xclass);
-
-        logger.warn("Equiv " + r.getEquivalentClasses(Nclass).getEntities().size());
         // since we've to anyway directly proceed by checking for membership of
         // X in subclass/superclasses of N, we should seriously optimize this
         // to directly proceed from the superclass/subclass chain on N and
         // their positions in the cluster space
         if (r.getEquivalentClasses(Nclass).contains(Xclass)) {
-            logger.warn("Equivalent!");
             addEquivalentClassLink(X, N);
             return true;
         }
         else if (r.getSuperClasses(Nclass, true /*direct*/).containsEntity(Xclass)) {
-            logger.warn(Nclass + " is a subclass of " + Xclass);
             for (Node XC : subclasses(X)) {
                 OWLClass XCclass = man.getOWLDataFactory().getOWLClass(IRI.create((String)XC.getProperty("IRI")));
                 if (r.getEquivalentClasses(Nclass).contains(XCclass)) {
@@ -327,17 +322,15 @@ public class RegisterSchemaAction implements Action {
                 }
             }
 
-            assert !isRoot(N);
+            //assert !isRoot(N);
             return true;
         }
         else if (r.getSubClasses(Nclass, true /*direct*/).containsEntity(Xclass)) {
-            logger.warn(Nclass + " is a superclass of " + Xclass);
             X.createRelationshipTo(N, ClusterSpace.PublicRelTypes.IS_A);
 
             // deal with siblings
             Collection<Node> siblings;
             if (isRoot(X)) {
-                logger.warn(Xclass + " is a ROOT");
                 siblings = getRoots();
                 siblings.remove(X);
             }
@@ -363,10 +356,12 @@ public class RegisterSchemaAction implements Action {
                 addRoot(N);
             }
             assert !isRoot(X);
-            return true;
+            // it is possible that other roots
+            // are N's super classes
+            return false;
         }
         else {
-            logger.warn("NONE FOUND");
+            //logger.warn("NONE FOUND");
         }
 
         return false;
@@ -384,7 +379,6 @@ public class RegisterSchemaAction implements Action {
             return true;
         }
         else if (reasoner.getSuperObjectProperties(Nprop, true /*direct*/).containsEntity(Xprop)) {
-            logger.warn(Nprop + " is a subproperty of " + Xprop);
             for (Node XP : subclasses(X)) {
                 OWLObjectProperty XPprop = man.getOWLDataFactory().getOWLObjectProperty(IRI.create((String)XP.getProperty("IRI")));
                 if (reasoner.getEquivalentObjectProperties(Nprop).contains(XPprop)) {
@@ -427,12 +421,10 @@ public class RegisterSchemaAction implements Action {
             return true;
         }
         else if (reasoner.getSubObjectProperties(Nprop, true /*direct*/).containsEntity(Xprop)) {
-            logger.warn(Nprop + " is a superclass of " + Xprop);
             X.createRelationshipTo(N, ClusterSpace.PublicRelTypes.IS_A);
 
             Collection<Node> siblings;
             if (isRootObjectProperty(X)) {
-                logger.warn(Xprop + " is a ROOT object property");
                 siblings = getRootObjectProperties();
                 siblings.remove(X);
             }
@@ -563,12 +555,11 @@ public class RegisterSchemaAction implements Action {
         }
 
         if (!linked) {
-            logger.warn("No links for " + c.getIRI());
             addRoot(n);
         }
 
         // no roots can be subclasses of something else
-        logger.warn("Roots len " + getRoots().size());
+        //logger.warn("Roots len " + getRoots().size());
         return n;
     }
 
@@ -598,11 +589,11 @@ public class RegisterSchemaAction implements Action {
         }
 
         if (!linked) {
-            logger.warn("No links for " + property.getIRI());
+            //logger.warn("No links for " + property.getIRI());
             addRootObjectProperty(n);
         }
 
-        logger.warn("Root relationships len " + getRootObjectProperties().size());
+        //logger.warn("Root relationships len " + getRootObjectProperties().size());
         return n;
     }
 
