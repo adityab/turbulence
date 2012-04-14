@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.LinkedList;
+import java.util.Set;
 
 import org.apache.commons.lang.UnhandledException;
 
@@ -22,6 +23,7 @@ import org.semanticweb.owlapi.apibinding.OWLManager;
 
 import org.semanticweb.owlapi.io.UnparsableOntologyException;
 import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
 import com.clarkparsia.pellet.owlapiv3.*;
@@ -42,6 +44,7 @@ public class RegisterSchemaAction implements Action {
 
     private Index<Node> conceptIndex;
     private static final String CONCEPT_INDEX_KEY = "CONCEPT";
+    private Node xsdStringNode = null;
 
     protected RegisterSchemaAction(URI uri)
     {
@@ -87,7 +90,6 @@ public class RegisterSchemaAction implements Action {
             TurbulenceDriver.submit(new OntologySaver(iri, ont, TurbulenceDriver.getOntologyStoreDirectory()));
 
         for (OWLImportsDeclaration decl : ont.getImportsDeclarations()) {
-            logger.info("Registering imported ontology " + decl.getIRI());
             try {
                 RegisterSchemaAction act = ActionFactory.createRegisterSchemaAction(new URI(decl.getIRI().toString()));
                 act.perform();
@@ -117,6 +119,22 @@ public class RegisterSchemaAction implements Action {
             }
 
             getKnownOntologiesReferenceNode().createRelationshipTo(ontNode, ClusterSpace.InternalRelTypes.KNOWN_ONTOLOGY);
+
+            Node strNode = cs.createNode();
+            strNode.setProperty("IRI", "http://www.w3.org/2001/XMLSchema#string");
+            Node strNodePrev = conceptIndex.putIfAbsent(strNode, CONCEPT_INDEX_KEY, "http://www.w3.org/2001/XMLSchema#string");
+            xsdStringNode = strNodePrev == null ? strNode : strNodePrev;
+
+            /*Node thingNode = cs.createNode();
+            thingNode.setProperty("IRI", "http://www.w3.org/2002/07/owl#Thing");
+            Node thingNodePrev = conceptIndex.putIfAbsent(thingNode, CONCEPT_INDEX_KEY, "http://www.w3.org/2002/07/owl#Thing");
+            if (thingNodePrev != null) {
+                thingNode.delete();
+            }
+            else {
+                addRoot(thingNode);
+            }*/
+
             tx.success();
         } catch (Exception e) {
             logger.warn(e);
@@ -173,22 +191,42 @@ public class RegisterSchemaAction implements Action {
             }
         }
 
-        for (OWLAxiom c : ont.getAxioms(AxiomType.DATA_PROPERTY_DOMAIN)) {
+        Set<String> dealt = new HashSet<String>();
+        for (OWLAxiom c : ont.getAxioms(AxiomType.DATA_PROPERTY_DOMAIN, true)) {
             OWLDataPropertyDomainAxiom ax = (OWLDataPropertyDomainAxiom) c;
             if (ax.getProperty().isAnonymous())
                 continue;
+            logger.warn(ax.getProperty().asOWLDataProperty().getIRI().toString());
             if (ax.getDomain().isAnonymous())
                 continue;
+
             tx = cs.beginTx();
             try {
                 for (OWLDataRange range : ax.getProperty().getRanges(ont)) {
                     createDataProperty(iri, ax.getProperty().asOWLDataProperty(), ax.getDomain().asOWLClass(), range);
+                    dealt.add(ax.getProperty().asOWLDataProperty().getIRI().toString());
                 }
                 tx.success();
             } catch (Exception e) {
                 logger.warn(e);
             } finally {
                 tx.finish();
+            }
+        }
+
+        for (OWLDataProperty pr : ont.getDataPropertiesInSignature(true)) {
+            if (dealt.contains(pr.getIRI().toString()))
+                continue;
+            if (pr.getDomains(ont).isEmpty()) {
+                for (OWLClass c : ont.getClassesInSignature(false /*exclude imports closure*/)) {
+                    if (pr.getRanges(ont).isEmpty()) {
+                        createDataProperty(pr.getIRI(), pr, c, ont.getOWLOntologyManager().getOWLDataFactory().getOWLDatatype(IRI.create("http://www.w3.org/2001/XMLSchema#string")));
+                    }
+                    else {
+                        for (OWLDataRange r : pr.getRanges(ont))
+                            createDataProperty(pr.getIRI(), pr, c, r);
+                    }
+                }
             }
         }
 
@@ -596,8 +634,8 @@ public class RegisterSchemaAction implements Action {
 
         Transaction tx = cs.beginTx();
         try {
-            // TODO set to column family location
-            //domainNode.setProperty(property.getIRI().toString());
+            Relationship rel = domainNode.createRelationshipTo(xsdStringNode, ClusterSpace.PublicRelTypes.DATATYPE_RELATIONSHIP);
+            rel.setProperty("IRI", property.getIRI().toString());
             tx.success();
         } catch (Exception e) {
             logger.warn(e);
