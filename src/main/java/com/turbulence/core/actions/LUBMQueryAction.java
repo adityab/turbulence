@@ -31,7 +31,7 @@ import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.beans.HColumn;
 
 public class LUBMQueryAction implements Action {
-    private static final Log logger = LogFactory.getLog(QueryAction.class);
+    private static final Log logger = LogFactory.getLog(LUBMQueryAction.class);
 
     private final String query;
     /**
@@ -43,6 +43,7 @@ public class LUBMQueryAction implements Action {
     }
 
 	public Result perform() {
+	    logger.warn(query);
         Query q = QueryFactory.create(query);
 
         if (q.getQueryType() != Query.QueryTypeSelect) {
