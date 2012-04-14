@@ -13,6 +13,10 @@ public class ActionFactory {
         return new StoreDataAction(in);
     }
 
+    public static StoreXMLDataAction createStoreXMLDataAction(InputStream in) {
+        return new StoreXMLDataAction(in);
+    }
+
     public static QueryAction createQueryAction(String query) {
         return new QueryAction(query);
     }

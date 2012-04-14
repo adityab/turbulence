@@ -59,6 +59,15 @@ public class RESTv1 {
     }
 
     @POST
+    @Path("/store_xml_data")
+    @Consumes("application/xml")
+    @Produces("application/xml")
+    public Result storeXMLData(final InputStream in) {
+        final StoreXMLDataAction act = ActionFactory.createStoreXMLDataAction(in);
+        return execute(act);
+    }
+
+    @POST
     @Path("/query")
     @Produces("application/xml")
     public StreamingOutput query(String body) {
